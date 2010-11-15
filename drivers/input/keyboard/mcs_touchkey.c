@@ -17,6 +17,8 @@
 #include <linux/pm.h>
 #include <linux/of_platform.h>
 #include <linux/of_gpio.h>
+#include <linux/workqueue.h>
+#include <linux/leds.h>
 
 /* MCS5000 Touchkey */
 #define MCS5000_TOUCHKEY_STATUS		0x04
@@ -276,6 +278,18 @@ static int mcs_touchkey_probe(struct i2c_client *client)
 		return error;
 
 	i2c_set_clientdata(client, data);
+
+	data->led_dev.name = "mcs_touchkey_led";
+	data->led_dev.brightness = LED_FULL;
+	data->led_dev.max_brightness = LED_ON;
+	data->led_dev.brightness_set = mcs_touchkey_led_brightness_set;
+
+	error = devm_led_classdev_register(&client->dev, &data->led_dev);
+	if (error) {
+		dev_err(&client->dev,
+			"failed to register touchkey led: %d\n", error);
+		return error;
+	}
 
 	return 0;
 }
