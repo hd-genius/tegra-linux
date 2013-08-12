@@ -17,8 +17,6 @@
 #include <linux/pm.h>
 #include <linux/of_platform.h>
 #include <linux/of_gpio.h>
-#include <linux/workqueue.h>
-#include <linux/leds.h>
 
 /* MCS5000 Touchkey */
 #define MCS5000_TOUCHKEY_STATUS		0x04
