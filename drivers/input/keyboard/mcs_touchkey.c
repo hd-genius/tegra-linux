@@ -277,18 +277,6 @@ static int mcs_touchkey_probe(struct i2c_client *client)
 
 	i2c_set_clientdata(client, data);
 
-	data->led_dev.name = "mcs_touchkey_led";
-	data->led_dev.brightness = LED_FULL;
-	data->led_dev.max_brightness = LED_ON;
-	data->led_dev.brightness_set = mcs_touchkey_led_brightness_set;
-
-	error = devm_led_classdev_register(&client->dev, &data->led_dev);
-	if (error) {
-		dev_err(&client->dev,
-			"failed to register touchkey led: %d\n", error);
-		return error;
-	}
-
 	return 0;
 }
 
