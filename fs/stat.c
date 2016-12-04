@@ -128,7 +128,7 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
 		stat->change_cookie = inode_query_iversion(inode);
 	}
 
-	idmap = mnt_idmap(path->mnt);
+	mnt_userns = mnt_user_ns(path->mnt);
 	if (inode->i_op->getattr)
 		return inode->i_op->getattr(idmap, path, stat,
 					    request_mask, query_flags);
