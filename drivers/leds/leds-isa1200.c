@@ -401,7 +401,8 @@ static int isa1200_parse_dt(struct i2c_client *client,
 }
 #endif
 
-static int isa1200_vibrator_i2c_probe(struct i2c_client *client)
+static int isa1200_vibrator_i2c_probe(struct i2c_client *client,
+			const struct i2c_device_id *id)
 {
 	struct isa1200_vibrator_platform_data *pdata = NULL;
 	struct isa1200_vibrator_drvdata *ddata;
@@ -479,7 +480,7 @@ err_free_mem:
 
 }
 
-static void isa1200_vibrator_i2c_remove(struct i2c_client *client)
+static int isa1200_vibrator_i2c_remove(struct i2c_client *client)
 {
 	struct isa1200_vibrator_drvdata *ddata  = i2c_get_clientdata(client);
 	struct led_classdev *led_cdev = &ddata->cdev;
@@ -496,6 +497,8 @@ static void isa1200_vibrator_i2c_remove(struct i2c_client *client)
 	ddata->wq = NULL;
 
 	kfree(ddata);
+
+	return 0;
 }
 
 #if 0
