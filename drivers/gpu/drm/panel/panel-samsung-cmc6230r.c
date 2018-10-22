@@ -515,7 +515,8 @@ static int cmc623_initialize_clks(struct i2c_client *client,
 	return err;
 }
 
-static int cmc623_i2c_probe(struct i2c_client *client)
+static int cmc623_i2c_probe(struct i2c_client *client,
+			const struct i2c_device_id *id)
 {
 	struct cmc623_data *data;
 	struct backlight_properties props;
@@ -609,7 +610,7 @@ error:
 	return err;
 }
 
-static void cmc623_i2c_remove(struct i2c_client *client)
+static int cmc623_i2c_remove(struct i2c_client *client)
 {
 	struct cmc623_data *data = i2c_get_clientdata(client);
 
@@ -621,6 +622,8 @@ static void cmc623_i2c_remove(struct i2c_client *client)
 	drm_panel_remove(&data->panel);
 
 	mutex_destroy(&data->tuning_mutex);
+
+	return 0;
 }
 
 static const struct i2c_device_id cmc623_id[] = {
