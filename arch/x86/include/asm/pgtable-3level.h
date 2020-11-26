@@ -102,7 +102,12 @@ static inline void pud_clear(pud_t *pudp)
 #ifdef CONFIG_SMP
 static inline pte_t native_ptep_get_and_clear(pte_t *ptep)
 {
-	return pxx_xchg64(pte, ptep, 0ULL);
+	pte_t old = *ptep;
+
+	do {
+	} while (!try_cmpxchg64(&ptep->pte, &old.pte, 0ULL));
+
+	return old;
 }
 
 #ifdef CONFIG_SMP
