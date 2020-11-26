@@ -37,7 +37,63 @@ static inline void native_set_pte(pte_t *ptep, pte_t pte)
 {
 	WRITE_ONCE(ptep->pte_high, pte.pte_high);
 	smp_wmb();
-	WRITE_ONCE(ptep->pte_low, pte.pte_low);
+	ptep->pte_low = pte.pte_low;
+}
+
+#define pmd_read_atomic pmd_read_atomic
+/*
+ * pte_offset_map_lock() on 32-bit PAE kernels was reading the pmd_t with
+ * a "*pmdp" dereference done by GCC. Problem is, in certain places
+ * where pte_offset_map_lock() is called, concurrent page faults are
+ * allowed, if the mmap_lock is hold for reading. An example is mincore
+ * vs page faults vs MADV_DONTNEED. On the page fault side
+ * pmd_populate() rightfully does a set_64bit(), but if we're reading the
+ * pmd_t with a "*pmdp" on the mincore side, a SMP race can happen
+ * because GCC will not read the 64-bit value of the pmd atomically.
+ *
+ * To fix this all places running pte_offset_map_lock() while holding the
+ * mmap_lock in read mode, shall read the pmdp pointer using this
+ * function to know if the pmd is null or not, and in turn to know if
+ * they can run pte_offset_map_lock() or pmd_trans_huge() or other pmd
+ * operations.
+ *
+ * Without THP if the mmap_lock is held for reading, the pmd can only
+ * transition from null to not null while pmd_read_atomic() runs. So
+ * we can always return atomic pmd values with this function.
+ *
+ * With THP if the mmap_lock is held for reading, the pmd can become
+ * trans_huge or none or point to a pte (and in turn become "stable")
+ * at any time under pmd_read_atomic(). We could read it truly
+ * atomically here with an atomic64_read() for the THP enabled case (and
+ * it would be a whole lot simpler), but to avoid using cmpxchg8b we
+ * only return an atomic pmdval if the low part of the pmdval is later
+ * found to be stable (i.e. pointing to a pte). We are also returning a
+ * 'none' (zero) pmdval if the low part of the pmd is zero.
+ *
+ * In some cases the high and low part of the pmdval returned may not be
+ * consistent if THP is enabled (the low part may point to previously
+ * mapped hugepage, while the high part may point to a more recently
+ * mapped hugepage), but pmd_none_or_trans_huge_or_clear_bad() only
+ * needs the low part of the pmd to be read atomically to decide if the
+ * pmd is unstable or not, with the only exception when the low part
+ * of the pmd is zero, in which case we return a 'none' pmd.
+ */
+static inline pmd_t pmd_read_atomic(pmd_t *pmdp)
+{
+	pmdval_t ret;
+	u32 *tmp = (u32 *)pmdp;
+
+	ret = (pmdval_t) (*tmp);
+	if (ret) {
+		/*
+		 * If the low part is null, we must not read the high part
+		 * or we can end up with a partial pmd.
+		 */
+		smp_rmb();
+		ret |= ((pmdval_t)*(tmp + 1)) << 32;
+	}
+
+	return (pmd_t) { .pmd = ret };
 }
 
 static inline void native_set_pte_atomic(pte_t *ptep, pte_t pte)
@@ -73,9 +129,9 @@ static inline void native_pte_clear(struct mm_struct *mm, unsigned long addr,
 
 static inline void native_pmd_clear(pmd_t *pmdp)
 {
-	WRITE_ONCE(pmdp->pmd_low, 0);
+	pmdp->pmd_low = 0;
 	smp_wmb();
-	WRITE_ONCE(pmdp->pmd_high, 0);
+	pmdp->pmd_high = 0;
 }
 
 static inline void native_pud_clear(pud_t *pudp)
@@ -105,14 +161,17 @@ static inline pte_t native_ptep_get_and_clear(pte_t *ptep)
 	return pxx_xchg64(pte, ptep, 0ULL);
 }
 
+#ifdef CONFIG_SMP
 static inline pmd_t native_pmdp_get_and_clear(pmd_t *pmdp)
 {
-	return pxx_xchg64(pmd, pmdp, 0ULL);
-}
+	pmd_t res;
 
-static inline pud_t native_pudp_get_and_clear(pud_t *pudp)
-{
-	return pxx_xchg64(pud, pudp, 0ULL);
+	/* xchg acts as a barrier before setting of the high bits */
+	res.pmd_low = xchg(&pmdp->pmd_low, 0);
+	res.pmd_high = READ_ONCE(pmdp->pmd_high);
+	WRITE_ONCE(pmdp->pmd_high, 0);
+
+	return res;
 }
 #else
 #define native_ptep_get_and_clear(xp) native_local_ptep_get_and_clear(xp)
@@ -137,6 +196,30 @@ static inline pmd_t pmdp_establish(struct vm_area_struct *vma,
 		old.pmd_low = xchg(&pmdp->pmd_low, pmd.pmd_low);
 		old.pmd_high = READ_ONCE(pmdp->pmd_high);
 		WRITE_ONCE(pmdp->pmd_high, pmd.pmd_high);
+
+		return old;
+	}
+
+	do {
+		old = *pmdp;
+	} while (cmpxchg64(&pmdp->pmd, old.pmd, pmd.pmd) != old.pmd);
+
+	return old;
+}
+#endif
+
+#ifdef CONFIG_SMP
+union split_pud {
+	struct {
+		u32 pud_low;
+		u32 pud_high;
+	};
+	pud_t pud;
+};
+
+static inline pud_t native_pudp_get_and_clear(pud_t *pudp)
+{
+	union split_pud res, *orig = (union split_pud *)pudp;
 
 		return old;
 	}
