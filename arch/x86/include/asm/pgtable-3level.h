@@ -99,28 +99,27 @@ static inline void pud_clear(pud_t *pudp)
 }
 
 
+#define pxx_xchg64(_pxx, _ptr, _val) ({					\
+	_pxx##val_t *_p = (_pxx##val_t *)_ptr;				\
+	_pxx##val_t _o = *_p;						\
+	do { } while (!try_cmpxchg64(_p, &_o, (_val)));			\
+	native_make_##_pxx(_o);						\
+})
+
 #ifdef CONFIG_SMP
 static inline pte_t native_ptep_get_and_clear(pte_t *ptep)
 {
-	pte_t old = *ptep;
-
-	do {
-	} while (!try_cmpxchg64(&ptep->pte, &old.pte, 0ULL));
-
-	return old;
+	return pxx_xchg64(pte, ptep, 0ULL);
 }
 
-#ifdef CONFIG_SMP
 static inline pmd_t native_pmdp_get_and_clear(pmd_t *pmdp)
 {
-	pmd_t res;
+	return pxx_xchg64(pmd, pmdp, 0ULL);
+}
 
-	/* xchg acts as a barrier before setting of the high bits */
-	res.pmd_low = xchg(&pmdp->pmd_low, 0);
-	res.pmd_high = READ_ONCE(pmdp->pmd_high);
-	WRITE_ONCE(pmdp->pmd_high, 0);
-
-	return res;
+static inline pud_t native_pudp_get_and_clear(pud_t *pudp)
+{
+	return pxx_xchg64(pud, pudp, 0ULL);
 }
 #else
 #define native_ptep_get_and_clear(xp) native_local_ptep_get_and_clear(xp)
@@ -149,50 +148,11 @@ static inline pmd_t pmdp_establish(struct vm_area_struct *vma,
 		return old;
 	}
 
-	do {
-		old = *pmdp;
-	} while (cmpxchg64(&pmdp->pmd, old.pmd, pmd.pmd) != old.pmd);
-
-	return old;
-}
-#endif
-
-#ifdef CONFIG_SMP
-union split_pud {
-	struct {
-		u32 pud_low;
-		u32 pud_high;
-	};
-	pud_t pud;
-};
-
-static inline pud_t native_pudp_get_and_clear(pud_t *pudp)
-{
-	union split_pud res, *orig = (union split_pud *)pudp;
-
-		return old;
-	}
-
 	return pxx_xchg64(pmd, pmdp, pmd.pmd);
 }
 #endif
 
-/*
- * Encode/decode swap entries and swap PTEs. Swap PTEs are all PTEs that
- * are !pte_none() && !pte_present().
- *
- * Format of swap PTEs:
- *
- *   6 6 6 6 5 5 5 5 5 5 5 5 5 5 4 4 4 4 4 4 4 4 4 4 3 3 3 3 3 3 3 3
- *   3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2
- *   < type -> <---------------------- offset ----------------------
- *
- *   3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
- *   1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
- *   --------------------------------------------> 0 E 0 0 0 0 0 0 0
- *
- *   E is the exclusive marker that is not stored in swap entries.
- */
+/* Encode and de-code a swap entry */
 #define SWP_TYPE_BITS		5
 #define _SWP_TYPE_MASK ((1U << SWP_TYPE_BITS) - 1)
 
