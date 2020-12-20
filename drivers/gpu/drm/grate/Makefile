@@ -35,6 +35,4 @@ tegra-drm-y := \
 	uapi/scheduler.o \
 	uapi/uapi.o
 
-tegra-drm-$(CONFIG_DRM_FBDEV_EMULATION) += fbdev.o
-
 obj-$(CONFIG_DRM_TEGRA) += tegra-drm.o

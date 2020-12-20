@@ -198,16 +198,24 @@ disable_rpm:
 	return err;
 }
 
-static void vic_remove(struct platform_device *pdev)
+static int vic_remove(struct platform_device *pdev)
 {
 	struct vic *vic = platform_get_drvdata(pdev);
+	int err;
 
 	pm_runtime_dont_use_autosuspend(&pdev->dev);
 	pm_runtime_force_suspend(&pdev->dev);
 
-	host1x_client_unregister(&vic->client.base);
+	err = host1x_client_unregister(&vic->client.base);
+	if (err < 0) {
+		dev_err(&pdev->dev, "failed to unregister host1x client: %d\n",
+			err);
+		return err;
+	}
 
 	falcon_exit(&vic->falcon);
+
+	return 0;
 }
 
 static const struct dev_pm_ops vic_pm_ops = {
@@ -223,7 +231,7 @@ struct platform_driver tegra_vic_driver = {
 		.pm = &vic_pm_ops
 	},
 	.probe = vic_probe,
-	.remove_new = vic_remove,
+	.remove = vic_remove,
 };
 
 #if IS_ENABLED(CONFIG_ARCH_TEGRA_124_SOC)

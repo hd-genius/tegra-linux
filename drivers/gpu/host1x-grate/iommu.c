@@ -90,7 +90,7 @@ int host1x_iommu_map_memory(struct host1x *host,
 		desc->dmaaddr = iova_dma_addr(&host->iova, alloc);
 
 		err = iommu_map(host->domain, desc->dmaaddr, desc->addr,
-				desc->size, IOMMU_READ, GFP_KERNEL);
+				desc->size, IOMMU_READ);
 		if (err) {
 			__free_iova(&host->iova, alloc);
 			return err;

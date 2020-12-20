@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-only
 config DRM_TEGRA_ORIG
 	tristate "NVIDIA Tegra DRM"
-	depends on ARCH_TEGRA || COMPILE_TEST
 	depends on !DRM_TEGRA
+	depends on ARCH_TEGRA || (ARM && COMPILE_TEST)
 	depends on COMMON_CLK
 	depends on DRM
 	depends on OF

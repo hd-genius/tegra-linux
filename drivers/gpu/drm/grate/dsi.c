@@ -912,15 +912,6 @@ static void tegra_dsi_encoder_enable(struct drm_encoder *encoder)
 	u32 value;
 	int err;
 
-	/* If the bootloader enabled DSI it needs to be disabled
-	 * in order for the panel initialization commands to be
-	 * properly sent.
-	 */
-	value = tegra_dsi_readl(dsi, DSI_POWER_CONTROL);
-
-	if (value & DSI_POWER_CONTROL_ENABLE)
-		tegra_dsi_disable(dsi);
-
 	err = tegra_dsi_prepare(dsi);
 	if (err < 0) {
 		dev_err(dsi->dev, "failed to prepare: %d\n", err);
@@ -1095,12 +1086,10 @@ static int tegra_dsi_runtime_suspend(struct host1x_client *client)
 	struct device *dev = client->dev;
 	int err;
 
-	if (dsi->rst) {
-		err = reset_control_assert(dsi->rst);
-		if (err < 0) {
-			dev_err(dev, "failed to assert reset: %d\n", err);
-			return err;
-		}
+	err = reset_control_assert(dsi->rst);
+	if (err < 0) {
+		dev_err(dev, "failed to assert reset: %d\n", err);
+		return err;
 	}
 
 	usleep_range(1000, 2000);
@@ -1152,12 +1141,10 @@ static int tegra_dsi_runtime_resume(struct host1x_client *client)
 
 	usleep_range(1000, 2000);
 
-	if (dsi->rst) {
-		err = reset_control_deassert(dsi->rst);
-		if (err < 0) {
-			dev_err(dev, "cannot assert reset: %d\n", err);
-			goto disable_clk_lp;
-		}
+	err = reset_control_deassert(dsi->rst);
+	if (err < 0) {
+		dev_err(dev, "cannot de-assert reset: %d\n", err);
+		goto disable_clk_lp;
 	}
 
 	return 0;
@@ -1553,10 +1540,8 @@ static int tegra_dsi_ganged_probe(struct tegra_dsi *dsi)
 		dsi->slave = platform_get_drvdata(gangster);
 		of_node_put(np);
 
-		if (!dsi->slave) {
-			put_device(&gangster->dev);
+		if (!dsi->slave)
 			return -EPROBE_DEFER;
-		}
 
 		dsi->slave->master = dsi;
 	}
@@ -1604,24 +1589,28 @@ static int tegra_dsi_probe(struct platform_device *pdev)
 	}
 
 	dsi->clk = devm_clk_get(&pdev->dev, NULL);
-	if (IS_ERR(dsi->clk))
-		return dev_err_probe(&pdev->dev, PTR_ERR(dsi->clk),
-				     "cannot get DSI clock\n");
+	if (IS_ERR(dsi->clk)) {
+		dev_err(&pdev->dev, "cannot get DSI clock\n");
+		return PTR_ERR(dsi->clk);
+	}
 
 	dsi->clk_lp = devm_clk_get(&pdev->dev, "lp");
-	if (IS_ERR(dsi->clk_lp))
-		return dev_err_probe(&pdev->dev, PTR_ERR(dsi->clk_lp),
-				     "cannot get low-power clock\n");
+	if (IS_ERR(dsi->clk_lp)) {
+		dev_err(&pdev->dev, "cannot get low-power clock\n");
+		return PTR_ERR(dsi->clk_lp);
+	}
 
 	dsi->clk_parent = devm_clk_get(&pdev->dev, "parent");
-	if (IS_ERR(dsi->clk_parent))
-		return dev_err_probe(&pdev->dev, PTR_ERR(dsi->clk_parent),
-				     "cannot get parent clock\n");
+	if (IS_ERR(dsi->clk_parent)) {
+		dev_err(&pdev->dev, "cannot get parent clock\n");
+		return PTR_ERR(dsi->clk_parent);
+	}
 
 	dsi->vdd = devm_regulator_get(&pdev->dev, "avdd-dsi-csi");
-	if (IS_ERR(dsi->vdd))
-		return dev_err_probe(&pdev->dev, PTR_ERR(dsi->vdd),
-				     "cannot get VDD supply\n");
+	if (IS_ERR(dsi->vdd)) {
+		dev_err(&pdev->dev, "cannot get VDD supply\n");
+		return PTR_ERR(dsi->vdd);
+	}
 
 	err = tegra_dsi_setup_clocks(dsi);
 	if (err < 0) {
@@ -1670,18 +1659,26 @@ mipi_free:
 	return err;
 }
 
-static void tegra_dsi_remove(struct platform_device *pdev)
+static int tegra_dsi_remove(struct platform_device *pdev)
 {
 	struct tegra_dsi *dsi = platform_get_drvdata(pdev);
+	int err;
 
 	pm_runtime_disable(&pdev->dev);
 
-	host1x_client_unregister(&dsi->client);
+	err = host1x_client_unregister(&dsi->client);
+	if (err < 0) {
+		dev_err(&pdev->dev, "failed to unregister host1x client: %d\n",
+			err);
+		return err;
+	}
 
 	tegra_output_remove(&dsi->output);
 
 	mipi_dsi_host_unregister(&dsi->host);
 	tegra_mipi_free(dsi->mipi);
+
+	return 0;
 }
 
 static const struct of_device_id tegra_dsi_of_match[] = {
@@ -1689,7 +1686,6 @@ static const struct of_device_id tegra_dsi_of_match[] = {
 	{ .compatible = "nvidia,tegra132-dsi", },
 	{ .compatible = "nvidia,tegra124-dsi", },
 	{ .compatible = "nvidia,tegra114-dsi", },
-	{ .compatible = "nvidia,tegra30-dsi", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, tegra_dsi_of_match);
@@ -1700,5 +1696,5 @@ struct platform_driver tegra_dsi_driver = {
 		.of_match_table = tegra_dsi_of_match,
 	},
 	.probe = tegra_dsi_probe,
-	.remove_new = tegra_dsi_remove,
+	.remove = tegra_dsi_remove,
 };

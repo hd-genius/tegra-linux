@@ -496,7 +496,7 @@ int __tegra_gem_mmap(struct drm_gem_object *gem, struct vm_area_struct *vma)
 		 * and set the vm_pgoff (used as a fake buffer offset by DRM)
 		 * to 0 as we want to map the whole buffer.
 		 */
-		vm_flags_clear(vma, VM_PFNMAP);
+		vma->vm_flags &= ~VM_PFNMAP;
 		vma->vm_pgoff = 0;
 
 		err = host1x_bo_mmap(host, bo->host1x_bo, vma);
@@ -512,7 +512,7 @@ int __tegra_gem_mmap(struct drm_gem_object *gem, struct vm_area_struct *vma)
 		 * and set the vm_pgoff (used as a fake buffer offset by DRM)
 		 * to 0 as we want to map the whole buffer.
 		 */
-		vm_flags_clear(vma, VM_PFNMAP);
+		vma->vm_flags &= ~VM_PFNMAP;
 		vma->vm_pgoff = 0;
 
 		err = dma_mmap_attrs(gem->dev->dev, vma, bo->dma_cookie,
@@ -526,7 +526,8 @@ int __tegra_gem_mmap(struct drm_gem_object *gem, struct vm_area_struct *vma)
 	} else {
 		pgprot_t prot = vm_get_page_prot(vma->vm_flags);
 
-		vm_flags_mod(vma, VM_MIXEDMAP, VM_PFNMAP);
+		vma->vm_flags |= VM_MIXEDMAP;
+		vma->vm_flags &= ~VM_PFNMAP;
 
 		vma->vm_page_prot = pgprot_writecombine(prot);
 	}

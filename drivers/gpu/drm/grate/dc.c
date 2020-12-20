@@ -765,14 +765,6 @@ static void tegra_plane_atomic_update(struct drm_plane *plane,
 	window.format = tegra_plane_state->format;
 	window.swap = tegra_plane_state->swap;
 
-	if (of_machine_is_compatible("asus,grouper")) {
-		struct drm_display_mode *mode = &plane->state->crtc->state->adjusted_mode;
-		window.dst.x = mode->hdisplay - window.dst.w - window.dst.x;
-		window.dst.y = mode->vdisplay - window.dst.h - window.dst.y;
-		window.reflect_x = !window.reflect_x;
-		window.reflect_y = !window.reflect_y;
-	}
-
 	for (i = 0; i < fb->format->num_planes; i++) {
 		window.base[i] = tegra_plane_state->iova[i] + fb->offsets[i];
 
@@ -3362,10 +3354,8 @@ static int tegra_dc_probe(struct platform_device *pdev)
 	usleep_range(2000, 4000);
 
 	err = reset_control_assert(dc->rst);
-	if (err < 0) {
-		clk_disable_unprepare(dc->clk);
+	if (err < 0)
 		return err;
-	}
 
 	usleep_range(2000, 4000);
 
