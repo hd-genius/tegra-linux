@@ -51,13 +51,13 @@ static struct snd_soc_jack_gpio tegra_machine_headset_jack_gpio = {
 };
 
 /* Mic Jack */
-static int coupled_mic_hp_check(void *data)
+static int headset_check(void *data)
 {
-	struct tegra_machine *machine = (struct tegra_machine *)data;
+	struct tegra_machine *machine = (struct tegra_machine *) data;
 
 	/* Detect mic insertion only if 3.5 jack is in */
 	if (gpiod_get_value_cansleep(machine->gpiod_hp_det) &&
-	    gpiod_get_value_cansleep(machine->gpiod_mic_det))
+			gpiod_get_value_cansleep(machine->gpiod_mic_det))
 		return SND_JACK_MICROPHONE;
 
 	return 0;
@@ -206,10 +206,8 @@ int tegra_asoc_machine_init(struct snd_soc_pcm_runtime *rtd)
 		tegra_machine_mic_jack_gpio.desc = machine->gpiod_mic_det;
 
 		if (of_property_read_bool(card->dev->of_node,
-					  "nvidia,coupled-mic-hp-det")) {
-			tegra_machine_mic_jack_gpio.desc = machine->gpiod_hp_det;
-			tegra_machine_mic_jack_gpio.jack_status_check = coupled_mic_hp_check;
-		}
+			"nvidia,coupled-mic-hp-det"))
+			tegra_machine_mic_jack_gpio.jack_status_check = headset_check;
 
 		err = snd_soc_jack_add_gpios(&tegra_machine_mic_jack, 1,
 					     &tegra_machine_mic_jack_gpio);
@@ -269,23 +267,18 @@ static unsigned int tegra_machine_mclk_rate_6mhz(unsigned int srate)
 	unsigned int mclk;
 
 	switch (srate) {
-	case 8000:
-	case 16000:
 	case 64000:
-		mclk = 8192000;
-		break;
-	case 11025:
-	case 22050:
 	case 88200:
-		mclk = 11289600;
-		break;
 	case 96000:
-		mclk = 12288000;
+		mclk = 128 * srate;
 		break;
 	default:
 		mclk = 256 * srate;
 		break;
 	}
+	/* FIXME: Codec only requires >= 3MHz if OSR==0 */
+	while (mclk < 6000000)
+		mclk *= 2;
 
 	return mclk;
 }
