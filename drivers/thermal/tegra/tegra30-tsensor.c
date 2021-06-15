@@ -419,6 +419,9 @@ static int tegra_tsensor_enable_hw_channel(const struct tegra_tsensor *ts,
 	dev_info_once(ts->dev, "ch%u: CPU freq div2 throttle trip set to %dC\n",
 		      id, DIV_ROUND_CLOSEST(hot_trip, 1000));
 
+	dev_info_once(ts->dev, "ch%u: CPU freq div2 throttle trip set to %dC\n",
+		      id, DIV_ROUND_CLOSEST(hot_trip, 1000));
+
 	dev_info_once(ts->dev, "ch%u: PMC emergency shutdown trip set to %dC\n",
 		      id, DIV_ROUND_CLOSEST(crit_trip, 1000));
 
@@ -633,20 +636,6 @@ static int tegra_tsensor_probe(struct platform_device *pdev)
 
 	for (i = 0; i < ARRAY_SIZE(ts->ch); i++) {
 		err = tegra_tsensor_register_channel(ts, i);
-		if (err)
-			return err;
-	}
-
-	/*
-	 * Enable the channels before setting the interrupt so
-	 * set_trips() can not be called while we are setting up the
-	 * register TSENSOR_SENSOR0_CONFIG1. With this we close a
-	 * potential race window where we are setting up the TH2 and
-	 * the temperature hits TH1 resulting to an update of the
-	 * TSENSOR_SENSOR0_CONFIG1 register in the ISR.
-	 */
-	for (i = 0; i < ARRAY_SIZE(ts->ch); i++) {
-		err = tegra_tsensor_enable_hw_channel(ts, i);
 		if (err)
 			return err;
 	}
