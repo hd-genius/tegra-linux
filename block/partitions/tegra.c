@@ -13,8 +13,6 @@
  *   Stephen Warren <swarren@wwwdotorg.org> (Useful suggestions about eMMC/etc)
  */
 
-#define DEBUG
-
 #define pr_fmt(fmt) "tegra-partition: " fmt
 
 #include <linux/blkdev.h>
