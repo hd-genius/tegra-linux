@@ -59,8 +59,6 @@ unevaluatedProperties: false
 
 examples:
   - |
-    #include <dt-bindings/clock/tegra30-car.h>
-    #include <dt-bindings/soc/tegra-pmc.h>
     sound {
         compatible = "asus,tegra-audio-rt5631-tf700t",
                      "nvidia,tegra-audio-rt5631";
@@ -75,11 +73,5 @@ examples:
                 "MIC Bias1", "Mic Jack",
                 "DMIC", "Int Mic";
 
-        nvidia,i2s-controller = <&tegra_i2s1>;
         nvidia,audio-codec = <&rt5631>;
-
-        clocks = <&tegra_car TEGRA30_CLK_PLL_A>,
-                 <&tegra_car TEGRA30_CLK_PLL_A_OUT0>,
-                 <&tegra_pmc TEGRA_PMC_CLK_OUT_1>;
-        clock-names = "pll_a", "pll_a_out0", "mclk";
     };
