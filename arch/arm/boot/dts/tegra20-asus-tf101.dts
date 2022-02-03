@@ -998,6 +998,13 @@
 		operating-range-celsius = <0 45>;
 	};
 
+	dock_battery: dock-battery {
+		compatible = "simple-battery";
+		charge-full-design-microamp-hours = <3300000>;
+		energy-full-design-microwatt-hours = <24000000>;
+		operating-range-celsius = <0 45>;
+	};
+
 	display-panel {
 		compatible = "auo,b101ew05", "panel-lvds";
 
