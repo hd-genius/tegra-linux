@@ -191,20 +191,18 @@ static void *ext2_get_page(struct inode *dir, unsigned long n,
 {
 	struct address_space *mapping = dir->i_mapping;
 	struct folio *folio = read_mapping_folio(mapping, n, NULL);
-	void *page_addr;
 
 	if (IS_ERR(folio))
-		return ERR_CAST(folio);
-	page_addr = kmap_local_folio(folio, n & (folio_nr_pages(folio) - 1));
+		return &folio->page;
+	*page_addr = kmap_local_folio(folio, n & (folio_nr_pages(folio) - 1));
 	if (unlikely(!folio_test_checked(folio))) {
-		if (!ext2_check_page(&folio->page, quiet, page_addr))
+		if (!ext2_check_page(&folio->page, quiet, *page_addr))
 			goto fail;
 	}
-	*page = &folio->page;
-	return page_addr;
+	return &folio->page;
 
 fail:
-	ext2_put_page(&folio->page, page_addr);
+	ext2_put_page(&folio->page, *page_addr);
 	return ERR_PTR(-EIO);
 }
 
