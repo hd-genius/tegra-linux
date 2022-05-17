@@ -15,11 +15,6 @@
 	#address-cells = <1>;
 	#size-cells = <1>;
 
-	memory: memory@80000000 {
-		device_type = "memory";
-		reg = <0x80000000 0x0>;
-	};
-
 	pcie@3000 {
 		compatible = "nvidia,tegra30-pcie";
 		device_type = "pci";
@@ -654,7 +649,7 @@
 		status = "disabled";
 	};
 
-	rtc@7000e000 {
+	tegra_rtc: rtc@7000e000 {
 		compatible = "nvidia,tegra30-rtc", "nvidia,tegra20-rtc";
 		reg = <0x7000e000 0x100>;
 		interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
@@ -1266,6 +1261,11 @@
 		nvidia,hsdiscon-level = <5>;
 		nvidia,pmc = <&tegra_pmc 1>;
 		status = "disabled";
+	};
+
+	memory: memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x0>;
 	};
 
 	cpus {
