@@ -710,8 +710,8 @@ void *read_part_sector(struct parsed_partitions *state, sector_t n, Sector *p)
 	if (IS_ERR(folio))
 		goto out;
 
-	p->v = folio;
-	return folio_address(folio) + offset_in_folio(folio, n * SECTOR_SIZE);
+	p->v = page;
+	return page_address(page) + offset_in_page(n * SECTOR_SIZE);
 out:
 	p->v = NULL;
 	return NULL;
