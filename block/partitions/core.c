@@ -706,12 +706,12 @@ void *read_part_sector(struct parsed_partitions *state, sector_t n, Sector *p)
 		goto out;
 	}
 
-	page = read_mapping_page(mapping, n >> PAGE_SECTORS_SHIFT, NULL);
-	if (IS_ERR(page))
+	folio = read_mapping_folio(mapping, n >> PAGE_SECTORS_SHIFT, NULL);
+	if (IS_ERR(folio))
 		goto out;
 
-	p->v = page;
-	return page_address(page) + offset_in_page(n * SECTOR_SIZE);
+	p->v = folio;
+	return folio_address(folio) + offset_in_folio(folio, n * SECTOR_SIZE);
 out:
 	p->v = NULL;
 	return NULL;
