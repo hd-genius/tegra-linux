@@ -150,7 +150,22 @@ void zonefs_i_size_write(struct inode *inode, loff_t isize)
 	}
 }
 
-void zonefs_update_stats(struct inode *inode, loff_t new_isize)
+static const struct address_space_operations zonefs_file_aops = {
+	.read_folio		= zonefs_read_folio,
+	.readahead		= zonefs_readahead,
+	.writepage		= zonefs_writepage,
+	.writepages		= zonefs_writepages,
+	.dirty_folio		= filemap_dirty_folio,
+	.release_folio		= iomap_release_folio,
+	.invalidate_folio	= iomap_invalidate_folio,
+	.migrate_folio		= filemap_migrate_folio,
+	.is_partially_uptodate	= iomap_is_partially_uptodate,
+	.error_remove_page	= generic_error_remove_page,
+	.direct_IO		= noop_direct_IO,
+	.swap_activate		= zonefs_swap_activate,
+};
+
+static void zonefs_update_stats(struct inode *inode, loff_t new_isize)
 {
 	struct super_block *sb = inode->i_sb;
 	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
