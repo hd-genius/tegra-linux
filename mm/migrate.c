@@ -723,10 +723,10 @@ static int __buffer_migrate_folio(struct address_space *mapping,
 
 	head = folio_buffers(src);
 	if (!head)
-		return migrate_folio(mapping, dst, src, mode);
+		return migrate_page(mapping, &dst->page, &src->page, mode);
 
 	/* Check whether page does not have extra refs before we do more work */
-	expected_count = folio_expected_refs(mapping, src);
+	expected_count = expected_page_refs(mapping, &src->page);
 	if (folio_ref_count(src) != expected_count)
 		return -EAGAIN;
 
