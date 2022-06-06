@@ -99,21 +99,23 @@ extern const char *migrate_reason_names[MR_TYPES];
 
 #ifdef CONFIG_MIGRATION
 
-void putback_movable_pages(struct list_head *l);
-int migrate_folio_extra(struct address_space *mapping, struct folio *dst,
-		struct folio *src, enum migrate_mode mode, int extra_count);
+extern void putback_movable_pages(struct list_head *l);
 int migrate_folio(struct address_space *mapping, struct folio *dst,
 		struct folio *src, enum migrate_mode mode);
-int migrate_pages(struct list_head *l, new_folio_t new, free_folio_t free,
-		  unsigned long private, enum migrate_mode mode, int reason,
-		  unsigned int *ret_succeeded);
-struct folio *alloc_migration_target(struct folio *src, unsigned long private);
-bool isolate_movable_page(struct page *page, isolate_mode_t mode);
+extern int migrate_pages(struct list_head *l, new_page_t new, free_page_t free,
+		unsigned long private, enum migrate_mode mode, int reason,
+		unsigned int *ret_succeeded);
+extern struct page *alloc_migration_target(struct page *page, unsigned long private);
+extern int isolate_movable_page(struct page *page, isolate_mode_t mode);
 
-int migrate_huge_page_move_mapping(struct address_space *mapping,
-		struct folio *dst, struct folio *src);
-void migration_entry_wait_on_locked(swp_entry_t entry, spinlock_t *ptl)
-		__releases(ptl);
+extern void migrate_page_states(struct page *newpage, struct page *page);
+extern void migrate_page_copy(struct page *newpage, struct page *page);
+extern int migrate_huge_page_move_mapping(struct address_space *mapping,
+				  struct page *newpage, struct page *page);
+extern int migrate_page_move_mapping(struct address_space *mapping,
+		struct page *newpage, struct page *page, int extra_count);
+void migration_entry_wait_on_locked(swp_entry_t entry, pte_t *ptep,
+				spinlock_t *ptl);
 void folio_migrate_flags(struct folio *newfolio, struct folio *folio);
 void folio_migrate_copy(struct folio *newfolio, struct folio *folio);
 int folio_migrate_mapping(struct address_space *mapping,
