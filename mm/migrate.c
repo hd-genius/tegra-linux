@@ -910,7 +910,7 @@ static int fallback_migrate_folio(struct address_space *mapping,
 		default:
 			return -EBUSY;
 		}
-		return writeout(mapping, src);
+		return writeout(mapping, &src->page);
 	}
 
 	/*
@@ -921,7 +921,7 @@ static int fallback_migrate_folio(struct address_space *mapping,
 	    !filemap_release_folio(src, GFP_KERNEL))
 		return mode == MIGRATE_SYNC ? -EAGAIN : -EBUSY;
 
-	return migrate_folio(mapping, dst, src, mode);
+	return migrate_page(mapping, &dst->page, &src->page, mode);
 }
 
 /*
