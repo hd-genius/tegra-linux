@@ -60,7 +60,6 @@
 
 bool isolate_movable_page(struct page *page, isolate_mode_t mode)
 {
-	struct folio *folio = folio_get_nontail_page(page);
 	const struct movable_operations *mops;
 
 	/*
@@ -108,10 +107,10 @@ bool isolate_movable_page(struct page *page, isolate_mode_t mode)
 	if (!folio_test_movable(folio) || folio_test_isolated(folio))
 		goto out_no_isolated;
 
-	mops = folio_movable_ops(folio);
-	VM_BUG_ON_FOLIO(!mops, folio);
+	mops = page_movable_ops(page);
+	VM_BUG_ON_PAGE(!mops, page);
 
-	if (!mops->isolate_page(&folio->page, mode))
+	if (!mops->isolate_page(page, mode))
 		goto out_no_isolated;
 
 	/* Driver shouldn't use PG_isolated bit of page->flags */
@@ -131,10 +130,10 @@ out:
 
 static void putback_movable_folio(struct folio *folio)
 {
-	const struct movable_operations *mops = folio_movable_ops(folio);
+	const struct movable_operations *mops = page_movable_ops(page);
 
-	mops->putback_page(&folio->page);
-	folio_clear_isolated(folio);
+	mops->putback_page(page);
+	ClearPageIsolated(page);
 }
 
 /*
@@ -976,7 +975,7 @@ static int move_to_new_folio(struct folio *dst, struct folio *src,
 			goto out;
 		}
 
-		mops = folio_movable_ops(src);
+		mops = page_movable_ops(&src->page);
 		rc = mops->migrate_page(&dst->page, &src->page, mode);
 		WARN_ON_ONCE(rc == MIGRATEPAGE_SUCCESS &&
 				!folio_test_isolated(src));

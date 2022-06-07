@@ -180,6 +180,21 @@ struct zs_size_stat {
 static struct dentry *zs_stat_root;
 #endif
 
+/*
+ * We assign a page to ZS_ALMOST_EMPTY fullness group when:
+ *	n <= N / f, where
+ * n = number of allocated objects
+ * N = total number of objects zspage can store
+ * f = fullness_threshold_frac
+ *
+ * Similarly, we assign zspage to:
+ *	ZS_ALMOST_FULL	when n > N / f
+ *	ZS_EMPTY	when n == 0
+ *	ZS_FULL		when n == N
+ *
+ * (see: fix_fullness_group())
+ */
+static const int fullness_threshold_frac = 4;
 static size_t huge_class_size;
 
 struct size_class {
@@ -254,6 +269,7 @@ struct zspage {
 	struct page *first_page;
 	struct list_head list; /* fullness list */
 	struct zs_pool *pool;
+#ifdef CONFIG_COMPACTION
 	rwlock_t lock;
 };
 
@@ -275,6 +291,7 @@ static bool ZsHugePage(struct zspage *zspage)
 	return zspage->huge;
 }
 
+#ifdef CONFIG_COMPACTION
 static void migrate_lock_init(struct zspage *zspage);
 static void migrate_read_lock(struct zspage *zspage);
 static void migrate_read_unlock(struct zspage *zspage);
@@ -287,6 +304,9 @@ static void kick_deferred_free(struct zs_pool *pool);
 static void init_deferred_free(struct zs_pool *pool);
 static void SetZsPageMovable(struct zs_pool *pool, struct zspage *zspage);
 #else
+static void migrate_lock_init(struct zspage *zspage) {}
+static void migrate_read_lock(struct zspage *zspage) {}
+static void migrate_read_unlock(struct zspage *zspage) {}
 static void migrate_write_lock(struct zspage *zspage) {}
 static void migrate_write_lock_nested(struct zspage *zspage) {}
 static void migrate_write_unlock(struct zspage *zspage) {}
@@ -1726,7 +1746,6 @@ static void lock_zspage(struct zspage *zspage)
 	}
 	migrate_read_unlock(zspage);
 }
-#endif /* CONFIG_COMPACTION */
 
 static void migrate_lock_init(struct zspage *zspage)
 {
@@ -1845,7 +1864,7 @@ static int zs_page_migrate(struct page *newpage, struct page *page,
 	 * The pool's lock protects the race between zpage migration
 	 * and zs_free.
 	 */
-	spin_lock(&pool->lock);
+	write_lock(&pool->migrate_lock);
 	class = zspage_class(pool, zspage);
 
 	/* the migrate_write_lock protects zpage access via zs_map_object */

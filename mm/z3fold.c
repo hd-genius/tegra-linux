@@ -1323,6 +1323,9 @@ static int z3fold_page_migrate(struct page *newpage, struct page *page,
 		encode_handle(new_zhdr, MIDDLE);
 	set_bit(NEEDS_COMPACTING, &newpage->private);
 	new_zhdr->cpu = smp_processor_id();
+	spin_lock(&pool->lock);
+	list_add(&newpage->lru, &pool->lru);
+	spin_unlock(&pool->lock);
 	__SetPageMovable(newpage, &z3fold_mops);
 	z3fold_page_unlock(new_zhdr);
 
