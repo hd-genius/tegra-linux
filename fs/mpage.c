@@ -649,7 +649,7 @@ confused:
 	/*
 	 * The caller has a ref on the inode, so *mapping is stable
 	 */
-	ret = block_write_full_page(&folio->page, mpd->get_block, wbc);
+	ret = mapping->a_ops->writepage(page, wbc);
 	mapping_set_error(mapping, ret);
 out:
 	mpd->bio = bio;
@@ -676,9 +676,20 @@ mpage_writepages(struct address_space *mapping,
 	int ret;
 
 	blk_start_plug(&plug);
-	ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
-	if (mpd.bio)
-		mpage_bio_submit_write(mpd.bio);
+
+	if (!get_block)
+		ret = generic_writepages(mapping, wbc);
+	else {
+		struct mpage_data mpd = {
+			.bio = NULL,
+			.last_block_in_bio = 0,
+			.get_block = get_block,
+		};
+
+		ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
+		if (mpd.bio)
+			mpage_bio_submit(mpd.bio);
+	}
 	blk_finish_plug(&plug);
 	return ret;
 }
