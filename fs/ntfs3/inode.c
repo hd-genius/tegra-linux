@@ -865,9 +865,9 @@ static int ntfs_resident_writepage(struct folio *folio,
 static int ntfs_writepages(struct address_space *mapping,
 			   struct writeback_control *wbc)
 {
+	/* Redirect call to 'ntfs_writepage' for resident files. */
 	if (is_resident(ntfs_i(mapping->host)))
-		return write_cache_pages(mapping, wbc, ntfs_resident_writepage,
-					 mapping);
+		return generic_writepages(mapping, wbc);
 	return mpage_writepages(mapping, wbc, ntfs_get_block);
 }
 
