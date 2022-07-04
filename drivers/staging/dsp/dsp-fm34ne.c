@@ -198,7 +198,8 @@ static int fm34ne_dsp_init_chip(struct fm34ne_dsp_data *fm34)
 	return 0;
 }
 
-static int fm34ne_dsp_probe(struct i2c_client *client)
+static int fm34ne_dsp_probe(struct i2c_client *client,
+			     const struct i2c_device_id *id)
 {
 	struct device *dev = &client->dev;
 	struct fm34ne_dsp_data *fm34;
