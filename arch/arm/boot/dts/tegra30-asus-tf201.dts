@@ -639,6 +639,24 @@
 		vcc-supply = <&vdd_3v3_sys>;
 	};
 
+	sound {
+		compatible = "asus,tegra-audio-rt5631-tf201",
+			     "nvidia,tegra-audio-rt5631";
+		nvidia,model = "Asus Transformer Prime TF201 RT5631";
+
+		nvidia,audio-routing =
+			"Headphone Jack", "HPOL",
+			"Headphone Jack", "HPOR",
+			"Int Spk", "SPOL",
+			"Int Spk", "SPOR",
+			"MIC1", "MIC Bias1",
+			"MIC Bias1", "Headset Mic",
+			"DMIC", "Int Mic";
+
+		nvidia,audio-codec = <&rt5631>;
+	};
+};
+
 	vdd_1v8_dsp: regulator-dsp {
 		compatible = "regulator-fixed";
 		regulator-name = "vdd_1v8_dsp";
