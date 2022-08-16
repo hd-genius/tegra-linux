@@ -82,6 +82,6 @@ properties:
 
   nvidia,coupled-mic-hp-det:
     type: boolean
-    description: The Mic detect GPIO is viable only if HP detect GPIO is active
+    description: The Mic detect GPIO is viable only if HP detect GPIO is active 
 
 additionalProperties: true
