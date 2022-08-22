@@ -15,9 +15,8 @@
  * An explicit change is one that would ordinarily result in a change to the
  * inode status change time (aka ctime). i_version must appear to change, even
  * if the ctime does not (since the whole point is to avoid missing updates due
- * to timestamp granularity). If POSIX or other relevant spec mandates that the
- * ctime must change due to an operation, then the i_version counter must be
- * incremented as well.
+ * to timestamp granularity). If POSIX mandates that the ctime must change due
+ * to an operation, then the i_version counter must be incremented as well.
  *
  * Making the i_version update completely atomic with the operation itself would
  * be prohibitively expensive. Traditionally the kernel has updated the times on
@@ -27,8 +26,7 @@
  * associate a new timestamp with old file contents. Since the purpose of the
  * i_version is to allow for better cache coherency, the i_version must always
  * be updated after the results of the operation are visible. Updating it before
- * and after a change is also permitted. (Note that no filesystems currently do
- * this. Fixing that is a work-in-progress).
+ * and after a change is also permitted.
  *
  * Observers see the i_version as a 64-bit number that never decreases. If it
  * remains the same since it was last checked, then nothing has changed in the
