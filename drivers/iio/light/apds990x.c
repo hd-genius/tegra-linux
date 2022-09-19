@@ -1097,6 +1097,35 @@ static const struct iio_info apds990x_info = {
 	.write_raw	= apds990x_write_raw,
 };
 
+static int apds990x_of_probe(struct i2c_client *client,
+			     struct apds990x_chip *chip)
+{
+	struct apds990x_platform_data *pdata;
+	u32 ret, val;
+
+	pdata = devm_kzalloc(&client->dev, sizeof(*pdata), GFP_KERNEL);
+	if (!pdata)
+		return -ENOMEM;
+
+	ret = device_property_read_u32(&client->dev, "avago,pdrive", &val);
+	if (ret) {
+		dev_info(&client->dev, "pdrive property is missing: ret %d\n", ret);
+		return ret;
+	}
+	pdata->pdrive = val;
+
+	ret = device_property_read_u32(&client->dev, "avago,ppcount", &val);
+	if (ret) {
+		dev_info(&client->dev, "ppcount property is missing: ret %d\n", ret);
+		return ret;
+	}
+	pdata->ppcount = val;
+
+	chip->pdata = pdata;
+
+	return 0;
+}
+
 static int apds990x_probe(struct i2c_client *client)
 {
 	struct apds990x_chip *chip;
@@ -1202,10 +1231,17 @@ static int apds990x_probe(struct i2c_client *client)
 		}
 	}
 
-	err = devm_request_threaded_irq(&client->dev, client->irq,
-					NULL, apds990x_irq,
-					IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
-					"apds990x", indio_dev);
+	err = sysfs_create_group(&chip->client->dev.kobj,
+				apds990x_attribute_group);
+	if (err < 0) {
+		dev_err(&chip->client->dev, "Sysfs registration failed\n");
+		goto fail4;
+	}
+
+	err = request_threaded_irq(client->irq, NULL,
+				apds990x_irq,
+				IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+				"apds990x", chip);
 	if (err) {
 		dev_err(&client->dev, "could not get IRQ %d\n",
 			client->irq);
