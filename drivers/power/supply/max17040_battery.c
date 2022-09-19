@@ -405,10 +405,6 @@ static int max17040_get_property(struct power_supply *psy,
 		val->intval = chip->low_soc_alert;
 		break;
 
-	case POWER_SUPPLY_PROP_STATUS:
-	case POWER_SUPPLY_PROP_HEALTH:
-		power_supply_get_property_from_supplier(psy, psp, val);
-		break;
 	case POWER_SUPPLY_PROP_TECHNOLOGY:
 		val->intval = chip->batt_info->technology;
 		break;
@@ -417,11 +413,6 @@ static int max17040_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
 		val->intval = chip->batt_info->charge_full_design_uah;
-		break;
-	case POWER_SUPPLY_PROP_TEMP:
-		iio_read_channel_raw(chip->channel_temp,
-				     &val->intval);
-		val->intval *= 10;
 		break;
 	case POWER_SUPPLY_PROP_TEMP_MIN:
 		if (chip->batt_info->temp_min == INT_MIN)
@@ -455,11 +446,8 @@ static enum power_supply_property max17040_battery_props[] = {
 	POWER_SUPPLY_PROP_CAPACITY,
 	POWER_SUPPLY_PROP_CAPACITY_ALERT_MIN,
 	POWER_SUPPLY_PROP_TECHNOLOGY,
-	POWER_SUPPLY_PROP_STATUS,
-	POWER_SUPPLY_PROP_HEALTH,
 	POWER_SUPPLY_PROP_ENERGY_FULL_DESIGN,
 	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
-	POWER_SUPPLY_PROP_TEMP,
 	POWER_SUPPLY_PROP_TEMP_MIN,
 	POWER_SUPPLY_PROP_TEMP_MAX,
 };
