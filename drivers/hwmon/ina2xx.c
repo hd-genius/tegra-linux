@@ -119,6 +119,7 @@ struct ina2xx_data {
 	long power_lsb_uW;
 	struct mutex config_lock;
 	struct regmap *regmap;
+	struct regulator *vdd_supply;
 
 	const struct attribute_group *groups[INA2XX_MAX_ATTRIBUTE_GROUPS];
 };
@@ -656,9 +657,16 @@ static int ina2xx_probe(struct i2c_client *client)
 		return PTR_ERR(data->regmap);
 	}
 
-	ret = devm_regulator_get_enable(dev, "vs");
-	if (ret)
-		return dev_err_probe(dev, ret, "failed to enable vs regulator\n");
+	data->vdd_supply = devm_regulator_get_optional(dev, "vdd");
+	if (IS_ERR(data->vdd_supply))
+		return dev_err_probe(dev, PTR_ERR(data->vdd_supply),
+				     "failed to get vdd regulator\n");
+
+	ret = regulator_enable(data->vdd_supply);
+	if (ret < 0) {
+		dev_err(dev, "failed to enable vdd power supply\n");
+		return ret;
+	}
 
 	ret = ina2xx_init(data);
 	if (ret < 0) {
