@@ -213,7 +213,8 @@ static const struct regmap_config max14526_regmap_config = {
 	.max_register = MAX14526_STATUS,
 };
 
-static int max14526_probe(struct i2c_client *client)
+static int max14526_probe(struct i2c_client *client,
+			     const struct i2c_device_id *id)
 {
 	struct device *dev = &client->dev;
 	struct max14526_data *priv;
