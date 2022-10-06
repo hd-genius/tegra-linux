@@ -581,7 +581,8 @@ static char *max8971_supplied_to[] = {
 	"battery",
 };
 
-static int max8971_probe(struct i2c_client *client)
+static int max8971_probe(struct i2c_client *client,
+			 const struct i2c_device_id *id)
 {
 	struct device *dev = &client->dev;
 	struct max8971_data *priv;
