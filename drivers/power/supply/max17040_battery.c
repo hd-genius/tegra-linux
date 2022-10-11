@@ -418,6 +418,11 @@ static int max17040_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
 		val->intval = chip->batt_info->charge_full_design_uah;
 		break;
+	case POWER_SUPPLY_PROP_TEMP:
+		iio_read_channel_raw(chip->channel_temp,
+				     &val->intval);
+		val->intval *= 10;
+		break;
 	case POWER_SUPPLY_PROP_TEMP_MIN:
 		if (chip->batt_info->temp_min == INT_MIN)
 			return -ENODATA;
@@ -454,6 +459,7 @@ static enum power_supply_property max17040_battery_props[] = {
 	POWER_SUPPLY_PROP_HEALTH,
 	POWER_SUPPLY_PROP_ENERGY_FULL_DESIGN,
 	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
+	POWER_SUPPLY_PROP_TEMP,
 	POWER_SUPPLY_PROP_TEMP_MIN,
 	POWER_SUPPLY_PROP_TEMP_MAX,
 };
@@ -658,7 +664,7 @@ static struct i2c_driver max17040_i2c_driver = {
 		.of_match_table = max17040_of_match,
 		.pm	= MAX17040_PM_OPS,
 	},
-	.probe		= max17040_probe,
+	.probe_new	= max17040_probe,
 	.remove		= max17040_remove,
 	.id_table	= max17040_id,
 };
