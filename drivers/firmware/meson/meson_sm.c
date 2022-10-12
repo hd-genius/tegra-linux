@@ -167,7 +167,7 @@ int meson_sm_call_read(struct meson_sm_firmware *fw, void *buffer,
 		size = bsize;
 
 	if (buffer)
-		memcpy(buffer, fw->sm_shmem_out_base, size);
+		memcpy_fromio(buffer, fw->sm_shmem_out_base, size);
 
 	return ret;
 }
@@ -203,7 +203,7 @@ int meson_sm_call_write(struct meson_sm_firmware *fw, void *buffer,
 	if (!fw->chip->cmd_shmem_in_base)
 		return -EINVAL;
 
-	memcpy(fw->sm_shmem_in_base, buffer, size);
+	memcpy_toio(fw->sm_shmem_in_base, buffer, size);
 
 	if (meson_sm_call(fw, cmd_index, &written, arg0, arg1, arg2, arg3, arg4) < 0)
 		return -EINVAL;
