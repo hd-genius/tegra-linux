@@ -525,7 +525,7 @@ static struct i2c_driver lm3560_i2c_driver = {
 		.pm = NULL,
 		.of_match_table = lm3560_match,
 	},
-	.probe = lm3560_probe,
+	.probe_new = lm3560_probe,
 	.remove = lm3560_remove,
 	.id_table = lm3560_id_table,
 };
