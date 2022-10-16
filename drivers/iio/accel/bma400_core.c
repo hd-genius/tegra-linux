@@ -868,7 +868,8 @@ static int bma400_init(struct bma400_data *data)
 					     ARRAY_SIZE(regulator_names),
 					     regulator_names);
 	if (ret)
-		return dev_err_probe(data->dev, ret, "Failed to get regulators\n");
+		return dev_err_probe(data->dev, ret, "Failed to get regulators: %d\n",
+				     ret);
 
 	/* Try to read chip_id register. It must return 0x90. */
 	ret = regmap_read(data->regmap, BMA400_CHIP_ID_REG, &val);
