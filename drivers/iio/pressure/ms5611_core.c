@@ -448,19 +448,8 @@ int ms5611_probe(struct iio_dev *indio_dev, struct device *dev,
 	}
 
 	return 0;
-
-err_buffer_cleanup:
-	iio_triggered_buffer_cleanup(indio_dev);
-	return ret;
 }
 EXPORT_SYMBOL_NS(ms5611_probe, IIO_MS5611);
-
-void ms5611_remove(struct iio_dev *indio_dev)
-{
-	iio_device_unregister(indio_dev);
-	iio_triggered_buffer_cleanup(indio_dev);
-}
-EXPORT_SYMBOL_NS(ms5611_remove, IIO_MS5611);
 
 MODULE_AUTHOR("Tomasz Duszynski <tduszyns@gmail.com>");
 MODULE_DESCRIPTION("MS5611 core driver");
