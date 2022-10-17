@@ -28,14 +28,12 @@
 struct stm32_romem_cfg {
 	int size;
 	u8 lower;
-	bool ta;
 };
 
 struct stm32_romem_priv {
 	void __iomem *base;
 	struct nvmem_config cfg;
 	u8 lower;
-	struct tee_context *ctx;
 };
 
 static int stm32_romem_read(void *context, unsigned int offset, void *buf,
@@ -211,6 +209,8 @@ static int stm32_romem_probe(struct platform_device *pdev)
 
 	priv->lower = 0;
 
+	priv->lower = 0;
+
 	cfg = (const struct stm32_romem_cfg *)
 		of_match_device(dev->driver->of_match_table, dev)->data;
 	if (!cfg) {
@@ -220,36 +220,15 @@ static int stm32_romem_probe(struct platform_device *pdev)
 	} else {
 		priv->cfg.size = cfg->size;
 		priv->lower = cfg->lower;
-		if (cfg->ta || optee_presence_check()) {
-			rc = stm32_bsec_optee_ta_open(&priv->ctx);
-			if (rc) {
-				/* wait for OP-TEE client driver to be up and ready */
-				if (rc == -EPROBE_DEFER)
-					return -EPROBE_DEFER;
-				/* BSEC PTA is required or SMC not supported */
-				if (cfg->ta || !stm32_bsec_smc_check())
-					return rc;
-			}
-		}
-		if (priv->ctx) {
-			rc = devm_add_action_or_reset(dev, stm32_bsec_optee_ta_close, priv->ctx);
-			if (rc) {
-				dev_err(dev, "devm_add_action_or_reset() failed (%d)\n", rc);
-				return rc;
-			}
-			priv->cfg.reg_read = stm32_bsec_pta_read;
-			priv->cfg.reg_write = stm32_bsec_pta_write;
-		} else {
-			priv->cfg.reg_read = stm32_bsec_read;
-			priv->cfg.reg_write = stm32_bsec_write;
-		}
+		priv->cfg.reg_read = stm32_bsec_read;
+		priv->cfg.reg_write = stm32_bsec_write;
 	}
 
 	return PTR_ERR_OR_ZERO(devm_nvmem_register(dev, &priv->cfg));
 }
 
 /*
- * STM32MP15/13 BSEC OTP regions: 4096 OTP bits (with 3072 effective bits)
+ * STM32MP15 BSEC OTP regions: 4096 OTP bits (with 3072 effective bits)
  * => 96 x 32-bits data words
  * - Lower: 1K bits, 2:1 redundancy, incremental bit programming
  *   => 32 (x 32-bits) lower shadow registers = words 0 to 31
@@ -259,13 +238,6 @@ static int stm32_romem_probe(struct platform_device *pdev)
 static const struct stm32_romem_cfg stm32mp15_bsec_cfg = {
 	.size = 384,
 	.lower = 32,
-	.ta = false,
-};
-
-static const struct stm32_romem_cfg stm32mp13_bsec_cfg = {
-	.size = 384,
-	.lower = 32,
-	.ta = true,
 };
 
 static const struct of_device_id stm32_romem_of_match[] __maybe_unused = {
