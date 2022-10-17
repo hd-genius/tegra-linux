@@ -209,8 +209,6 @@ static int stm32_romem_probe(struct platform_device *pdev)
 
 	priv->lower = 0;
 
-	priv->lower = 0;
-
 	cfg = (const struct stm32_romem_cfg *)
 		of_match_device(dev->driver->of_match_table, dev)->data;
 	if (!cfg) {
