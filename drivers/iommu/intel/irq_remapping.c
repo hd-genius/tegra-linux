@@ -181,8 +181,7 @@ static int modify_irte(struct irq_2_iommu *irq_iommu,
 		 * behind us, so the return value of cmpxchg16 should be the
 		 * same as the old value.
 		 */
-		u128 old = irte->irte;
-		WARN_ON(!try_cmpxchg128(&irte->irte, &old, irte_modified->irte));
+		WARN_ON(!ret);
 	} else {
 		WRITE_ONCE(irte->low, irte_modified->low);
 		WRITE_ONCE(irte->high, irte_modified->high);
