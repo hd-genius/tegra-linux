@@ -6167,8 +6167,8 @@ void *mas_find_range_rev(struct ma_state *mas, unsigned long min)
 	if (mas_find_rev_setup(mas, min, &entry))
 		return entry;
 
-	/* Retries on dead nodes handled by mas_prev_slot */
-	return mas_prev_slot(mas, min, true);
+	/* Retries on dead nodes handled by mas_prev_entry */
+	return mas_prev_entry(mas, min);
 }
 EXPORT_SYMBOL_GPL(mas_find_range_rev);
 
