@@ -610,7 +610,19 @@ static __always_inline bool cpumask_andnot(struct cpumask *dstp,
 				  const struct cpumask *src2p)
 {
 	return bitmap_andnot(cpumask_bits(dstp), cpumask_bits(src1p),
-					  cpumask_bits(src2p), small_cpumask_bits);
+					  cpumask_bits(src2p), nr_cpumask_bits);
+}
+
+/**
+ * cpumask_complement - *dstp = ~*srcp
+ * @dstp: the cpumask result
+ * @srcp: the input to invert
+ */
+static __always_inline void cpumask_complement(struct cpumask *dstp,
+				      const struct cpumask *srcp)
+{
+	bitmap_complement(cpumask_bits(dstp), cpumask_bits(srcp),
+					      nr_cpumask_bits);
 }
 
 /**
