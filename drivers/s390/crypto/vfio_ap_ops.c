@@ -1604,53 +1604,49 @@ static struct vfio_ap_queue *vfio_ap_find_queue(int apqn)
 	return q;
 }
 
-static int apq_status_check(int apqn, struct ap_queue_status *status)
+static int vfio_ap_wait_4_reset_complete(struct vfio_ap_queue *q)
 {
-	switch (status->response_code) {
-	case AP_RESPONSE_NORMAL:
-	case AP_RESPONSE_RESET_IN_PROGRESS:
-		if (status->queue_empty && !status->irq_enabled)
-			return 0;
-		return -EBUSY;
-	case AP_RESPONSE_DECONFIGURED:
-		/*
-		 * If the AP queue is deconfigured, any subsequent AP command
-		 * targeting the queue will fail with the same response code. On the
-		 * other hand, when an AP adapter is deconfigured, the associated
-		 * queues are reset, so let's return a value indicating the reset
-		 * for which we're waiting completed successfully.
-		 */
-		return 0;
-	default:
-		WARN(true,
-		     "failed to verify reset of queue %02x.%04x: TAPQ rc=%u\n",
-		     AP_QID_CARD(apqn), AP_QID_QUEUE(apqn),
-		     status->response_code);
-		return -EIO;
-	}
-}
-
-static int apq_reset_check(struct vfio_ap_queue *q)
-{
-	int ret;
-	int iters = MAX_RESET_CHECK_WAIT / AP_RESET_INTERVAL;
+	int iters = 2, ret = 0;
 	struct ap_queue_status status;
 
-	for (; iters > 0; iters--) {
-		msleep(AP_RESET_INTERVAL);
+	while (iters--) {
+		msleep(20);
 		status = ap_tapq(q->apqn, NULL);
-		ret = apq_status_check(q->apqn, &status);
-		if (ret != -EBUSY)
-			return ret;
+
+		switch (status.response_code) {
+		case AP_RESPONSE_NORMAL:
+			ret = 0;
+
+			if (status.queue_empty && !status.irq_enabled)
+				goto verify_done;
+			break;
+		case AP_RESPONSE_RESET_IN_PROGRESS:
+			ret = -EBUSY;
+			break;
+		case AP_RESPONSE_DECONFIGURED:
+			ret = 0;
+			goto verify_done;
+		default:
+			ret = -EIO;
+			WARN(true,
+			     "failed to verify reset of queue %02x.%04x: TAPQ rc=%u\n",
+			     AP_QID_CARD(q->apqn), AP_QID_QUEUE(q->apqn),
+			     status.response_code);
+			goto verify_done;
+		}
 	}
+
 	WARN_ONCE(iters <= 0,
 		  "timeout verifying reset of queue %02x.%04x (%u, %u, %u)",
 		  AP_QID_CARD(q->apqn), AP_QID_QUEUE(q->apqn),
 		  status.queue_empty, status.irq_enabled, status.response_code);
+
+verify_done:
 	return ret;
 }
 
-static int vfio_ap_mdev_reset_queue(struct vfio_ap_queue *q)
+static int vfio_ap_mdev_reset_queue(struct vfio_ap_queue *q,
+				    unsigned int retry)
 {
 	struct ap_queue_status status;
 	int ret;
@@ -1693,6 +1689,11 @@ retry_zapq:
 		return -EIO;
 	}
 
+	/* if the reset has not completed, wait for it to take effect */
+	if (!status.queue_empty || status.irq_enabled)
+		ret = vfio_ap_wait_4_reset_complete(q);
+
+free_resources:
 	vfio_ap_free_aqic_resources(q);
 
 	return ret;
