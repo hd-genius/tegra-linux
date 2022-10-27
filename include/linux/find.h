@@ -7,6 +7,7 @@
 #endif
 
 #include <linux/bitops.h>
+#include <linux/math.h>
 
 unsigned long _find_next_bit(const unsigned long *addr1, unsigned long nbits,
 				unsigned long start);
@@ -54,14 +55,11 @@ static __always_inline
 unsigned long find_next_bit(const unsigned long *addr, unsigned long size,
 			    unsigned long offset)
 {
-	if (small_const_nbits(size)) {
-		unsigned long val;
+	if (small_const_nbits_off(size, offset)) {
+		unsigned long val = addr[offset/BITS_PER_LONG] &
+				    GENMASK((size - 1) % BITS_PER_LONG, offset % BITS_PER_LONG);
 
-		if (unlikely(offset >= size))
-			return size;
-
-		val = *addr & GENMASK(size - 1, offset);
-		return val ? __ffs(val) : size;
+		return val ? round_down(offset, BITS_PER_LONG) + __ffs(val) : size;
 	}
 
 	return _find_next_bit(addr, size, offset);
@@ -84,14 +82,11 @@ unsigned long find_next_and_bit(const unsigned long *addr1,
 		const unsigned long *addr2, unsigned long size,
 		unsigned long offset)
 {
-	if (small_const_nbits(size)) {
-		unsigned long val;
+	if (small_const_nbits_off(size, offset)) {
+		unsigned long val = addr1[offset/BITS_PER_LONG] & addr2[offset/BITS_PER_LONG] &
+				    GENMASK((size - 1) % BITS_PER_LONG, offset % BITS_PER_LONG);
 
-		if (unlikely(offset >= size))
-			return size;
-
-		val = *addr1 & *addr2 & GENMASK(size - 1, offset);
-		return val ? __ffs(val) : size;
+		return val ? round_down(offset, BITS_PER_LONG) + __ffs(val) : size;
 	}
 
 	return _find_next_and_bit(addr1, addr2, size, offset);
@@ -115,14 +110,11 @@ unsigned long find_next_andnot_bit(const unsigned long *addr1,
 		const unsigned long *addr2, unsigned long size,
 		unsigned long offset)
 {
-	if (small_const_nbits(size)) {
-		unsigned long val;
+	if (small_const_nbits_off(size, offset)) {
+		unsigned long val = addr1[offset/BITS_PER_LONG] & ~addr2[offset/BITS_PER_LONG] &
+				    GENMASK((size - 1) % BITS_PER_LONG, offset % BITS_PER_LONG);
 
-		if (unlikely(offset >= size))
-			return size;
-
-		val = *addr1 & ~*addr2 & GENMASK(size - 1, offset);
-		return val ? __ffs(val) : size;
+		return val ? round_down(offset, BITS_PER_LONG) + __ffs(val) : size;
 	}
 
 	return _find_next_andnot_bit(addr1, addr2, size, offset);
@@ -173,14 +165,11 @@ static __always_inline
 unsigned long find_next_zero_bit(const unsigned long *addr, unsigned long size,
 				 unsigned long offset)
 {
-	if (small_const_nbits(size)) {
-		unsigned long val;
+	if (small_const_nbits_off(size, offset)) {
+		unsigned long val = addr[offset/BITS_PER_LONG] |
+				    ~GENMASK((size - 1) % BITS_PER_LONG, offset % BITS_PER_LONG);
 
-		if (unlikely(offset >= size))
-			return size;
-
-		val = *addr | ~GENMASK(size - 1, offset);
-		return val == ~0UL ? size : ffz(val);
+		return val == ~0UL ? size : round_down(offset, BITS_PER_LONG) + ffz(val);
 	}
 
 	return _find_next_zero_bit(addr, size, offset);
