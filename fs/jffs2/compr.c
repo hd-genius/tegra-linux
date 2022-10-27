@@ -366,22 +366,11 @@ int __init jffs2_compressors_init(void)
 {
 	int ret = 0;
 /* Registering compressors */
-	ret = jffs2_zlib_init();
-	if (ret)
-		goto exit;
-	ret = jffs2_rtime_init();
-	if (ret)
-		goto exit_zlib;
-	ret = jffs2_rubinmips_init();
-	if (ret)
-		goto exit_rtime;
-	ret = jffs2_dynrubin_init();
-	if (ret)
-		goto exit_runinmips;
-	ret = jffs2_lzo_init();
-	if (ret)
-		goto exit_dynrubin;
-
+	jffs2_zlib_init();
+	jffs2_rtime_init();
+	jffs2_rubinmips_init();
+	jffs2_dynrubin_init();
+	jffs2_lzo_init();
 
 /* Setting default compression mode */
 #ifdef CONFIG_JFFS2_CMODE_NONE
