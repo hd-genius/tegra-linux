@@ -815,7 +815,7 @@ static int comp_irqs_request_pci(struct mlx5_core_dev *dev)
 	struct mlx5_eq_table *table = dev->priv.eq_table;
 	const struct cpumask *prev = cpu_none_mask;
 	const struct cpumask *mask;
-	int ncomp_eqs;
+	int ncomp_eqs = table->num_comp_eqs;
 	u16 *cpus;
 	int ret;
 	int cpu;
@@ -836,9 +836,20 @@ static int comp_irqs_request_pci(struct mlx5_core_dev *dev)
 		}
 		prev = mask;
 	}
+
+	i = 0;
+	rcu_read_lock();
+	for_each_numa_hop_mask(mask, dev->priv.numa_node) {
+		for_each_cpu_andnot(cpu, mask, prev) {
+			cpus[i] = cpu;
+			if (++i == ncomp_eqs)
+				goto spread_done;
+		}
+		prev = mask;
+	}
 spread_done:
 	rcu_read_unlock();
-	ret = mlx5_irqs_request_vectors(dev, cpus, ncomp_eqs, table->comp_irqs, &table->rmap);
+	ret = mlx5_irqs_request_vectors(dev, cpus, ncomp_eqs, table->comp_irqs);
 	kfree(cpus);
 	return ret;
 }
