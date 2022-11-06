@@ -302,7 +302,7 @@ static void handle_user_interrupt(struct hl_device *hdev, struct hl_user_interru
 			if (pend->ts_reg_info.buf) {
 				if (!reg_node_handle_fail) {
 					rc = handle_registration_node(hdev, pend,
-							&ts_reg_free_list_head, intr->timestamp);
+								&ts_reg_free_list_head, now);
 					if (rc)
 						reg_node_handle_fail = true;
 				}
