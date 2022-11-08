@@ -1944,7 +1944,7 @@ out:
 
 	hl_ctx_put(ctx);
 
-	hl_abort_waiting_for_completions(hdev);
+	hl_abort_waitings_for_completion(hdev);
 
 	return 0;
 
