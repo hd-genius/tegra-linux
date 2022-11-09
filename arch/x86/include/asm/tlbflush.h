@@ -111,7 +111,7 @@ struct tlb_state {
 	 */
 	bool invalidate_other;
 
-#ifdef CONFIG_ADDRESS_MASKING
+#ifdef CONFIG_X86_64
 	/*
 	 * Active LAM mode.
 	 *
@@ -377,29 +377,27 @@ static inline bool huge_pmd_needs_flush(pmd_t oldpmd, pmd_t newpmd)
 }
 #define huge_pmd_needs_flush huge_pmd_needs_flush
 
-#ifdef CONFIG_ADDRESS_MASKING
-static inline  u64 tlbstate_lam_cr3_mask(void)
+#ifdef CONFIG_X86_64
+static inline unsigned long tlbstate_lam_cr3_mask(void)
 {
-	u64 lam = this_cpu_read(cpu_tlbstate.lam);
+	unsigned long lam = this_cpu_read(cpu_tlbstate.lam);
 
 	return lam << X86_CR3_LAM_U57_BIT;
 }
 
-static inline void set_tlbstate_lam_mode(struct mm_struct *mm)
+static inline void set_tlbstate_cr3_lam_mask(unsigned long mask)
 {
-	this_cpu_write(cpu_tlbstate.lam,
-		       mm->context.lam_cr3_mask >> X86_CR3_LAM_U57_BIT);
-	this_cpu_write(tlbstate_untag_mask, mm->context.untag_mask);
+	this_cpu_write(cpu_tlbstate.lam, mask >> X86_CR3_LAM_U57_BIT);
 }
 
 #else
 
-static inline u64 tlbstate_lam_cr3_mask(void)
+static inline unsigned long tlbstate_lam_cr3_mask(void)
 {
 	return 0;
 }
 
-static inline void set_tlbstate_lam_mode(struct mm_struct *mm)
+static inline void set_tlbstate_cr3_lam_mask(u64 mask)
 {
 }
 #endif

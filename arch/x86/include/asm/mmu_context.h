@@ -85,35 +85,17 @@ static inline void switch_ldt(struct mm_struct *prev, struct mm_struct *next)
 }
 #endif
 
-#ifdef CONFIG_ADDRESS_MASKING
+#ifdef CONFIG_X86_64
 static inline unsigned long mm_lam_cr3_mask(struct mm_struct *mm)
 {
-	return mm->context.lam_cr3_mask;
+	return READ_ONCE(mm->context.lam_cr3_mask);
 }
 
 static inline void dup_lam(struct mm_struct *oldmm, struct mm_struct *mm)
 {
 	mm->context.lam_cr3_mask = oldmm->context.lam_cr3_mask;
-	mm->context.untag_mask = oldmm->context.untag_mask;
 }
 
-#define mm_untag_mask mm_untag_mask
-static inline unsigned long mm_untag_mask(struct mm_struct *mm)
-{
-	return mm->context.untag_mask;
-}
-
-static inline void mm_reset_untag_mask(struct mm_struct *mm)
-{
-	mm->context.untag_mask = -1UL;
-}
-
-#define arch_pgtable_dma_compat arch_pgtable_dma_compat
-static inline bool arch_pgtable_dma_compat(struct mm_struct *mm)
-{
-	return !mm_lam_cr3_mask(mm) ||
-		test_bit(MM_CONTEXT_FORCE_TAGGED_SVA, &mm->context.flags);
-}
 #else
 
 static inline unsigned long mm_lam_cr3_mask(struct mm_struct *mm)
@@ -122,10 +104,6 @@ static inline unsigned long mm_lam_cr3_mask(struct mm_struct *mm)
 }
 
 static inline void dup_lam(struct mm_struct *oldmm, struct mm_struct *mm)
-{
-}
-
-static inline void mm_reset_untag_mask(struct mm_struct *mm)
 {
 }
 #endif
@@ -207,7 +185,7 @@ static inline void arch_dup_pkeys(struct mm_struct *oldmm,
 static inline int arch_dup_mmap(struct mm_struct *oldmm, struct mm_struct *mm)
 {
 	arch_dup_pkeys(oldmm, mm);
-	paravirt_enter_mmap(mm);
+	paravirt_arch_dup_mmap(oldmm, mm);
 	dup_lam(oldmm, mm);
 	return ldt_dup_context(oldmm, mm);
 }

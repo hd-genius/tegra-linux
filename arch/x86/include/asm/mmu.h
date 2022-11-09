@@ -43,15 +43,10 @@ typedef struct {
 #endif
 
 #ifdef CONFIG_X86_64
-	unsigned long flags;
-#endif
+	unsigned short flags;
 
-#ifdef CONFIG_ADDRESS_MASKING
 	/* Active LAM mode:  X86_CR3_LAM_U48 or X86_CR3_LAM_U57 or 0 (disabled) */
 	unsigned long lam_cr3_mask;
-
-	/* Significant bits of the virtual address. Excludes tag bits. */
-	u64 untag_mask;
 #endif
 
 	struct mutex lock;
