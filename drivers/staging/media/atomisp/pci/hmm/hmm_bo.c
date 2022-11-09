@@ -657,13 +657,33 @@ static int alloc_vmalloc_pages(struct hmm_buffer_object *bo, void *vmalloc_addr)
 	void *vaddr = vmalloc_addr;
 	int i;
 
-	for (i = 0; i < bo->pgnr; i++) {
-		bo->pages[i] = vmalloc_to_page(vaddr);
-		if (!bo->pages[i]) {
-			dev_err(atomisp_dev, "Error could not get page %d of vmalloc buf\n", i);
-			return -ENOMEM;
-		}
-		vaddr += PAGE_SIZE;
+	for (i = 0; i < page_nr; i++)
+		put_page(bo->pages[i]);
+}
+
+/*
+ * Convert user space virtual address into pages list
+ */
+static int alloc_user_pages(struct hmm_buffer_object *bo,
+			    const void __user *userptr)
+{
+	int page_nr;
+
+	userptr = untagged_addr(current->mm, userptr);
+
+	/* Handle frame buffer allocated in user space */
+	mutex_unlock(&bo->mutex);
+	page_nr = get_user_pages_fast((unsigned long)userptr, bo->pgnr, 1, bo->pages);
+	mutex_lock(&bo->mutex);
+
+	/* can be written by caller, not forced */
+	if (page_nr != bo->pgnr) {
+		dev_err(atomisp_dev,
+			"get_user_pages err: bo->pgnr = %d, pgnr actually pinned = %d.\n",
+			bo->pgnr, page_nr);
+		if (page_nr < 0)
+			page_nr = 0;
+		goto out_of_mem;
 	}
 
 	return 0;

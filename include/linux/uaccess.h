@@ -22,14 +22,7 @@
  * It's defined as noop for architectures that don't support memory tagging.
  */
 #ifndef untagged_addr
-#define untagged_addr(addr) (addr)
-#endif
-
-#ifndef untagged_addr_remote
-#define untagged_addr_remote(mm, addr)	({		\
-	mmap_assert_locked(mm);				\
-	untagged_addr(addr);				\
-})
+#define untagged_addr(mm, addr) (addr)
 #endif
 
 /*
