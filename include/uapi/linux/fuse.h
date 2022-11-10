@@ -204,9 +204,6 @@
  *  - add total_extlen to fuse_in_header
  *  - add FUSE_MAX_NR_SECCTX
  *  - add extension header
- *  - add FUSE_EXT_GROUPS
- *  - add FUSE_CREATE_SUPP_GROUP
- *  - add FUSE_HAS_EXPIRE_ONLY
  */
 
 #ifndef _LINUX_FUSE_H
@@ -517,12 +514,10 @@ struct fuse_file_lock {
 /**
  * extension type
  * FUSE_MAX_NR_SECCTX: maximum value of &fuse_secctx_header.nr_secctx
- * FUSE_EXT_GROUPS: &fuse_supp_groups extension
  */
 enum fuse_ext_type {
 	/* Types 0..31 are reserved for fuse_secctx_header */
 	FUSE_MAX_NR_SECCTX	= 31,
-	FUSE_EXT_GROUPS		= 32,
 };
 
 enum fuse_opcode {
@@ -1081,16 +1076,6 @@ struct fuse_secctx_header {
 struct fuse_ext_header {
 	uint32_t	size;
 	uint32_t	type;
-};
-
-/**
- * struct fuse_supp_groups - Supplementary group extension
- * @nr_groups: number of supplementary groups
- * @groups: flexible array of group IDs
- */
-struct fuse_supp_groups {
-	uint32_t	nr_groups;
-	uint32_t	groups[];
 };
 
 #endif /* _LINUX_FUSE_H */
