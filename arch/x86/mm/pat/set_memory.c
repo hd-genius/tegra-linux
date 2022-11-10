@@ -1768,7 +1768,7 @@ static int __change_page_attr_set_clr(struct cpa_data *cpa, int primary)
 		if (ret)
 			goto out;
 
-		if (primary && !(cpa->flags & CPA_NO_CHECK_ALIAS)) {
+		if (checkalias && !(cpa->flags & CPA_NO_CHECK_ALIAS)) {
 			ret = cpa_process_alias(cpa);
 			if (ret)
 				goto out;
@@ -1846,7 +1846,10 @@ static int change_page_attr_set_clr(unsigned long *addr, int numpages,
 	cpa.curpage = 0;
 	cpa.force_split = force_split;
 
-	ret = __change_page_attr_set_clr(&cpa, 1);
+	/* No alias checking for _NX bit modifications */
+	checkalias = (pgprot_val(mask_set) | pgprot_val(mask_clr)) != _PAGE_NX;
+
+	ret = __change_page_attr_set_clr(&cpa, checkalias);
 
 	/*
 	 * Check whether we really changed something:
