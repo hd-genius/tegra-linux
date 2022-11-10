@@ -1746,8 +1746,7 @@ static int __change_page_attr_set_clr(struct cpa_data *cpa, int primary)
 	/*
 	 * No changes, easy!
 	 */
-	if (!(pgprot_val(cpa->mask_set) | pgprot_val(cpa->mask_clr)) &&
-	    !cpa->force_split)
+	if (!(pgprot_val(cpa->mask_set) | pgprot_val(cpa->mask_clr)))
 		return ret;
 
 	while (rempages) {
@@ -1846,10 +1845,7 @@ static int change_page_attr_set_clr(unsigned long *addr, int numpages,
 	cpa.curpage = 0;
 	cpa.force_split = force_split;
 
-	/* No alias checking for _NX bit modifications */
-	checkalias = (pgprot_val(mask_set) | pgprot_val(mask_clr)) != _PAGE_NX;
-
-	ret = __change_page_attr_set_clr(&cpa, checkalias);
+	ret = __change_page_attr_set_clr(&cpa, 1);
 
 	/*
 	 * Check whether we really changed something:
