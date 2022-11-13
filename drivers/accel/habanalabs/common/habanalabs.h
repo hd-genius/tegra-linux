@@ -3302,6 +3302,8 @@ struct hl_reset_info {
  *                         Used only for testing.
  * @heartbeat: Controls if we want to enable the heartbeat mechanism vs. the f/w, which verifies
  *             that the f/w is always alive. Used only for testing.
+ * @supports_ctx_switch: true if a ctx switch is required upon first submission.
+ * @support_preboot_binning: true if we support read binning info from preboot.
  */
 struct hl_device {
 	struct pci_dev			*pdev;
