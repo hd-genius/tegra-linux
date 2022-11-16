@@ -659,6 +659,10 @@ enum pq_init_status {
  *      Generic opcode for all firmware info that is only passed to host
  *      through the LKD, without getting parsed there.
  *
+ * * CPUCP_PACKET_GENERIC_PASSTHROUGH -
+ *      Generic opcode for all firmware info that is only passed to host
+ *      through the LKD, without getting parsed there.
+ *
  * CPUCP_PACKET_ACTIVE_STATUS_SET -
  *       LKD sends FW indication whether device is free or in use, this indication is reported
  *       also to the BMC.
@@ -732,9 +736,6 @@ enum cpucp_packet_id {
 	CPUCP_PACKET_RESERVED9,			/* not used */
 	CPUCP_PACKET_RESERVED10,		/* not used */
 	CPUCP_PACKET_RESERVED11,		/* not used */
-	CPUCP_PACKET_RESERVED12,		/* internal */
-	CPUCP_PACKET_REGISTER_INTERRUPTS,	/* internal */
-	CPUCP_PACKET_SOFT_RESET,		/* internal */
 	CPUCP_PACKET_ID_MAX			/* must be last */
 };
 

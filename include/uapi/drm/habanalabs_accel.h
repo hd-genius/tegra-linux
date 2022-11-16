@@ -803,12 +803,6 @@ enum hl_server_type {
  *                            timestamp will be 0.
  * HL_INFO_USER_MAPPINGS - Retrieve user mappings, captured after page fault event.
  * HL_INFO_FW_GENERIC_REQ - Send generic request to FW.
- * HL_INFO_HW_ERR_EVENT   - Retrieve information on the reported HW error.
- *                          May return 0 even though no new data is available, in that case
- *                          timestamp will be 0.
- * HL_INFO_FW_ERR_EVENT   - Retrieve information on the reported FW error.
- *                          May return 0 even though no new data is available, in that case
- *                          timestamp will be 0.
  */
 #define HL_INFO_HW_IP_INFO			0
 #define HL_INFO_HW_EVENTS			1
@@ -843,8 +837,6 @@ enum hl_server_type {
 #define HL_INFO_PAGE_FAULT_EVENT		33
 #define HL_INFO_USER_MAPPINGS			34
 #define HL_INFO_FW_GENERIC_REQ			35
-#define HL_INFO_HW_ERR_EVENT			36
-#define HL_INFO_FW_ERR_EVENT			37
 
 #define HL_INFO_VERSION_MAX_LEN			128
 #define HL_INFO_CARD_NAME_MAX_LEN		16
