@@ -632,6 +632,8 @@ static void pwm_backlight_remove(struct platform_device *pdev)
 
 	if (pb->exit)
 		pb->exit(&pdev->dev);
+
+	return 0;
 }
 
 static void pwm_backlight_shutdown(struct platform_device *pdev)
