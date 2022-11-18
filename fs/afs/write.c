@@ -787,7 +787,11 @@ try_again:
 			start += ret;
 		}
 
-		folio_batch_release(&fbatch);
+		start += ret;
+
+		if (max_one_loop)
+			break;
+
 		cond_resched();
 	} while (wbc->nr_to_write > 0);
 
