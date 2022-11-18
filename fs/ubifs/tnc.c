@@ -291,26 +291,26 @@ static struct ubifs_znode *dirty_cow_znode(struct ubifs_info *c,
 		return zn;
 
 	if (zbr->len) {
-		struct ubifs_old_idx *old_idx;
-
-		old_idx = kmalloc(sizeof(struct ubifs_old_idx), GFP_NOFS);
-		if (unlikely(!old_idx)) {
-			err = -ENOMEM;
+		err = insert_old_idx(c, zbr->lnum, zbr->offs);
+		if (unlikely(err))
+			/*
+			 * Obsolete znodes will be freed by tnc_destroy_cnext()
+			 * or free_obsolete_znodes(), copied up znodes should
+			 * be added back to tnc and freed by
+			 * ubifs_destroy_tnc_subtree().
+			 */
 			goto out;
-		}
-		old_idx->lnum = zbr->lnum;
-		old_idx->offs = zbr->offs;
-
 		err = add_idx_dirt(c, zbr->lnum, zbr->len);
 		if (err) {
 			kfree(old_idx);
 			goto out;
 		}
 
-		do_insert_old_idx(c, old_idx);
-	}
-
-	replace_znode(c, zn, znode, zbr);
+out:
+	zbr->znode = zn;
+	zbr->lnum = 0;
+	zbr->offs = 0;
+	zbr->len = 0;
 
 	return zn;
 
