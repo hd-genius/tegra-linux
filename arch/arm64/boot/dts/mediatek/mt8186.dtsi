@@ -901,7 +901,7 @@
 					#size-cells = <0>;
 					#power-domain-cells = <1>;
 
-					mfg1: power-domain@MT8186_POWER_DOMAIN_MFG1 {
+					power-domain@MT8186_POWER_DOMAIN_MFG1 {
 						reg = <MT8186_POWER_DOMAIN_MFG1>;
 						mediatek,infracfg = <&infracfg_ao>;
 						#address-cells = <1>;
