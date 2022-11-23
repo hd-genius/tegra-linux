@@ -887,7 +887,7 @@ static int device_early_init(struct hl_device *hdev)
 	if (rc)
 		goto free_chip_info;
 
-	hl_mem_mgr_init(hdev->dev, &hdev->kernel_mem_mgr);
+	hl_mem_mgr_init(hdev->dev, &hdev->kernel_mem_mgr, 1);
 
 	snprintf(workq_name, 32, "hl%u_device_reset", hdev->cdev_idx);
 	hdev->reset_wq = create_singlethread_workqueue(workq_name);
