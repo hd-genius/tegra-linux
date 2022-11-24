@@ -9811,7 +9811,6 @@ static void gaudi2_handle_eqe(struct hl_device *hdev, struct hl_eq_entry *eq_ent
 	case GAUDI2_EVENT_CPU_FIX_THERMAL_ENV_S:
 	case GAUDI2_EVENT_CPU_FIX_THERMAL_ENV_E:
 		gaudi2_print_clk_change_info(hdev, event_type, &event_mask);
-		error_count = GAUDI2_NA_EVENT_CAUSE;
 		break;
 
 	case GAUDI2_EVENT_CPU_PKT_QUEUE_OUT_SYNC:
