@@ -1308,7 +1308,7 @@ void pdc_io_reset_devices(void)
 #endif /* defined(BOOTLOADER) */
 
 /* locked by pdc_lock */
-static char iodc_dbuf[4096] __page_aligned_bss;
+char iodc_dbuf[2*4096] __page_aligned_bss;
 
 /**
  * pdc_iodc_print - Console print using IODC.
@@ -1378,8 +1378,7 @@ int pdc_iodc_getc(void)
 		    __pa(pdc_result), 0, __pa(iodc_dbuf), 1, 0);
 
 	ch = *iodc_dbuf;
-	/* like convert_to_wide() but for first return value only: */
-	status = *(int *)&pdc_result;
+	status = *pdc_result;
 	spin_unlock_irqrestore(&pdc_lock, flags);
 
 	if (status == 0)
