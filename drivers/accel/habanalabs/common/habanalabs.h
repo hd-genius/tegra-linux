@@ -1709,7 +1709,6 @@ struct hl_asic_funcs {
 					u32 num_engines, u32 engine_command);
 	int (*send_device_activity)(struct hl_device *hdev, bool open);
 	int (*set_dram_properties)(struct hl_device *hdev);
-	int (*set_binning_masks)(struct hl_device *hdev);
 };
 
 
