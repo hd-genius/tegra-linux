@@ -1813,20 +1813,10 @@ err_dma_buf_put:
 	return rc;
 }
 
-static int validate_export_params_common(struct hl_device *hdev, u64 device_addr, u64 size)
+static int validate_export_params(struct hl_device *hdev, u64 device_addr, u64 size)
 {
-	struct hl_dmabuf_priv *hl_dmabuf;
-	struct hl_device *hdev = ctx->hdev;
-	struct asic_fixed_properties *prop;
+	struct asic_fixed_properties *prop = &hdev->asic_prop;
 	u64 bar_address;
-	int rc;
-
-	prop = &hdev->asic_prop;
-
-	if (prop->dram_supports_virtual_memory) {
-		dev_dbg(hdev->dev, "Export not supported for devices with virtual memory\n");
-		return -EOPNOTSUPP;
-	}
 
 	if (!IS_ALIGNED(device_addr, PAGE_SIZE)) {
 		dev_dbg(hdev->dev,
@@ -1873,6 +1863,43 @@ static int validate_export_params_no_mmu(struct hl_device *hdev, u64 device_addr
 			device_addr, size);
 		return -EINVAL;
 	}
+
+	return 0;
+}
+
+/**
+ * export_dmabuf_from_addr() - export a dma-buf object for the given memory
+ *                             address and size.
+ * @ctx: pointer to the context structure.
+ * @device_addr:  device memory physical address.
+ * @size: size of device memory.
+ * @flags: DMA-BUF file/FD flags.
+ * @dmabuf_fd: pointer to result FD that represents the dma-buf object.
+ *
+ * Create and export a dma-buf object for an existing memory allocation inside
+ * the device memory, and return a FD which is associated with the dma-buf
+ * object.
+ *
+ * Return: 0 on success, non-zero for failure.
+ */
+static int export_dmabuf_from_addr(struct hl_ctx *ctx, u64 device_addr,
+					u64 size, int flags, int *dmabuf_fd)
+{
+	struct hl_dmabuf_priv *hl_dmabuf;
+	struct hl_device *hdev = ctx->hdev;
+	struct asic_fixed_properties *prop;
+	int rc;
+
+	prop = &hdev->asic_prop;
+
+	if (prop->dram_supports_virtual_memory) {
+		dev_dbg(hdev->dev, "Export not supported for devices with virtual memory\n");
+		return -EOPNOTSUPP;
+	}
+
+	rc = validate_export_params(hdev, device_addr, size);
+	if (rc)
+		return rc;
 
 	hl_dmabuf = kzalloc(sizeof(*hl_dmabuf), GFP_KERNEL);
 	if (!hl_dmabuf)
