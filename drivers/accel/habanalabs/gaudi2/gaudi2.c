@@ -6261,7 +6261,7 @@ static int gaudi2_hw_fini(struct hl_device *hdev, bool hard_reset, bool fw_reset
 	}
 
 skip_reset:
-	if (driver_performs_reset || hard_reset) {
+	if (driver_performs_reset || hard_reset)
 		/*
 		 * Instead of waiting for BTM indication we should wait for preboot ready:
 		 * Consider the below scenario:
@@ -6281,15 +6281,14 @@ skip_reset:
 		 * communicate with FW that is during reset.
 		 * to overcome this we will always wait to preboot ready indication
 		 */
-
-		/* without this sleep reset will not work */
-		msleep(reset_sleep_ms);
-
-		if (hdev->fw_components & FW_TYPE_PREBOOT_CPU)
+		if ((hdev->fw_components & FW_TYPE_PREBOOT_CPU)) {
+			msleep(reset_sleep_ms);
 			hl_fw_wait_preboot_ready(hdev);
-		else
-			gaudi2_poll_btm_indication(hdev, poll_timeout_us);
-	}
+		} else {
+			gaudi2_poll_btm_indication(hdev, reset_sleep_ms, poll_timeout_us);
+		}
+	else
+		gaudi2_get_soft_rst_done_indication(hdev, poll_timeout_us);
 
 	if (!gaudi2)
 		return 0;
