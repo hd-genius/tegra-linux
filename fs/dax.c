@@ -1467,16 +1467,6 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
 	 * written by write(2) is visible in mmap.
 	 */
 	if (iomap->flags & IOMAP_F_NEW || cow) {
-		/*
-		 * Filesystem allows CoW on non-shared extents. The src extents
-		 * may have been mmapped with dirty mark before. To be able to
-		 * invalidate its dax entries, we need to clear the dirty mark
-		 * in advance.
-		 */
-		if (cow)
-			__dax_clear_dirty_range(iomi->inode->i_mapping,
-						pos >> PAGE_SHIFT,
-						(end - 1) >> PAGE_SHIFT);
 		invalidate_inode_pages2_range(iomi->inode->i_mapping,
 					      pos >> PAGE_SHIFT,
 					      (end - 1) >> PAGE_SHIFT);
@@ -1511,8 +1501,8 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
 		}
 
 		if (cow) {
-			ret = dax_iomap_copy_around(pos, length, PAGE_SIZE,
-						    srcmap, kaddr);
+			ret = dax_iomap_cow_copy(pos, length, PAGE_SIZE, srcmap,
+						 kaddr);
 			if (ret)
 				break;
 		}
