@@ -749,7 +749,7 @@ static int tsl2563_probe(struct i2c_client *client)
 			irq_flags = IRQF_TRIGGER_RISING;
 		irq_flags |= IRQF_ONESHOT;
 
-		err = devm_request_threaded_irq(&client->dev, client->irq,
+		err = devm_request_threaded_irq(dev, client->irq,
 					   NULL,
 					   &tsl2563_event_handler,
 					   irq_flags,
