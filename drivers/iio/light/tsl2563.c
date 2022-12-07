@@ -66,8 +66,8 @@
 
 #define TSL2563_INT_DISABLED	0x00
 #define TSL2563_INT_LEVEL	0x10
-#define TSL2563_INT_MASK	GENMASK(5, 4)
-#define TSL2563_INT_PERSIST(n)	((n) & GENMASK(3, 0))
+#define TSL2563_INT_MASK	0x30
+#define TSL2563_INT_PERSIST(n)	((n) & 0x0F)
 
 struct tsl2563_gainlevel_coeff {
 	u8 gaintime;
