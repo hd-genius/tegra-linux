@@ -29,6 +29,7 @@
 #include <linux/iio/events.h>
 #include <linux/iio/iio.h>
 #include <linux/iio/sysfs.h>
+#include <linux/iio/events.h>
 
 /* Use this many bits for fraction part. */
 #define ADC_FRAC_BITS		14
@@ -697,7 +698,6 @@ static int tsl2563_probe(struct i2c_client *client)
 	struct device *dev = &client->dev;
 	struct iio_dev *indio_dev;
 	struct tsl2563_chip *chip;
-	struct tsl2563_platform_data *pdata = client->dev.platform_data;
 	unsigned long irq_flags;
 	u8 id = 0;
 	int err;
