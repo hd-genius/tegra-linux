@@ -699,7 +699,6 @@ static int tsl2563_probe(struct i2c_client *client)
 	struct tsl2563_chip *chip;
 	struct tsl2563_platform_data *pdata = client->dev.platform_data;
 	unsigned long irq_flags;
-	int err = 0;
 	u8 id = 0;
 	int err;
 
