@@ -697,7 +697,9 @@ static int tsl2563_probe(struct i2c_client *client)
 	struct device *dev = &client->dev;
 	struct iio_dev *indio_dev;
 	struct tsl2563_chip *chip;
+	struct tsl2563_platform_data *pdata = client->dev.platform_data;
 	unsigned long irq_flags;
+	int err = 0;
 	u8 id = 0;
 	int err;
 
@@ -748,7 +750,7 @@ static int tsl2563_probe(struct i2c_client *client)
 			irq_flags = IRQF_TRIGGER_RISING;
 		irq_flags |= IRQF_ONESHOT;
 
-		err = devm_request_threaded_irq(dev, client->irq,
+		err = devm_request_threaded_irq(&client->dev, client->irq,
 					   NULL,
 					   &tsl2563_event_handler,
 					   irq_flags,
