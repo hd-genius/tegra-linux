@@ -143,11 +143,18 @@ static int klp_match_callback(void *data, unsigned long addr)
 	return 0;
 }
 
-static int klp_find_callback(void *data, const char *name, unsigned long addr)
+static int klp_find_callback(void *data, const char *name,
+			     struct module *mod, unsigned long addr)
 {
 	struct klp_find_arg *args = data;
 
+	if ((mod && !args->objname) || (!mod && args->objname))
+		return 0;
+
 	if (strcmp(args->name, name))
+		return 0;
+
+	if (args->objname && strcmp(args->objname, mod->name))
 		return 0;
 
 	return klp_match_callback(data, addr);
