@@ -1565,10 +1565,8 @@ struct engines_data {
  * @access_dev_mem: access device memory
  * @set_dram_bar_base: set the base of the DRAM BAR
  * @set_engine_cores: set a config command to engine cores
- * @set_engines: set a config command to user engines
  * @send_device_activity: indication to FW about device availability
  * @set_dram_properties: set DRAM related properties.
- * @set_binning_masks: set binning/enable masks for all relevant components.
  */
 struct hl_asic_funcs {
 	int (*early_init)(struct hl_device *hdev);
