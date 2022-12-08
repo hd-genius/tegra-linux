@@ -1771,6 +1771,8 @@ unlock:
  *   there is an intermediary node C, which is < N hops away from both
  *   nodes A and B, the system is a glueless mesh.
  */
+#include <linux/bsearch.h>
+
 static void init_numa_topology_type(int offline_node)
 {
 	int a, b, c, n;
@@ -2084,19 +2086,14 @@ struct __cmp_key {
 
 static int hop_cmp(const void *a, const void *b)
 {
-	struct cpumask **prev_hop, **cur_hop = *(struct cpumask ***)b;
+	struct cpumask **prev_hop = *((struct cpumask ***)b - 1);
+	struct cpumask **cur_hop = *(struct cpumask ***)b;
 	struct __cmp_key *k = (struct __cmp_key *)a;
 
 	if (cpumask_weight_and(k->cpus, cur_hop[k->node]) <= k->cpu)
 		return 1;
 
-	if (b == k->masks) {
-		k->w = 0;
-		return 0;
-	}
-
-	prev_hop = *((struct cpumask ***)b - 1);
-	k->w = cpumask_weight_and(k->cpus, prev_hop[k->node]);
+	k->w = (b == k->masks) ? 0 : cpumask_weight_and(k->cpus, prev_hop[k->node]);
 	if (k->w <= k->cpu)
 		return 0;
 
@@ -2134,39 +2131,6 @@ unlock:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(sched_numa_find_nth_cpu);
-
-/**
- * sched_numa_hop_mask() - Get the cpumask of CPUs at most @hops hops away from
- *                         @node
- * @node: The node to count hops from.
- * @hops: Include CPUs up to that many hops away. 0 means local node.
- *
- * Return: On success, a pointer to a cpumask of CPUs at most @hops away from
- * @node, an error value otherwise.
- *
- * Requires rcu_lock to be held. Returned cpumask is only valid within that
- * read-side section, copy it if required beyond that.
- *
- * Note that not all hops are equal in distance; see sched_init_numa() for how
- * distances and masks are handled.
- * Also note that this is a reflection of sched_domains_numa_masks, which may change
- * during the lifetime of the system (offline nodes are taken out of the masks).
- */
-const struct cpumask *sched_numa_hop_mask(unsigned int node, unsigned int hops)
-{
-	struct cpumask ***masks;
-
-	if (node >= nr_node_ids || hops >= sched_domains_numa_levels)
-		return ERR_PTR(-EINVAL);
-
-	masks = rcu_dereference(sched_domains_numa_masks);
-	if (!masks)
-		return ERR_PTR(-EBUSY);
-
-	return masks[hops][node];
-}
-EXPORT_SYMBOL_GPL(sched_numa_hop_mask);
-
 #endif /* CONFIG_NUMA */
 
 static int __sdt_alloc(const struct cpumask *cpu_map)
