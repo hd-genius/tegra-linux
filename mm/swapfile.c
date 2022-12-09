@@ -1751,7 +1751,7 @@ static int unuse_pte(struct vm_area_struct *vma, pmd_t *pmd,
 
 	swapcache = page;
 	page = ksm_might_need_to_copy(page, vma, addr);
-	if (unlikely(!page))
+	if (IS_ERR_OR_NULL(page))
 		return -ENOMEM;
 	else if (unlikely(PTR_ERR(page) == -EHWPOISON))
 		hwposioned = true;
