@@ -172,7 +172,7 @@ unwind(struct unwind_state *state, stack_trace_consume_fn consume_entry,
 			: stackinfo_get_unknown();		\
 	})
 
-noinline noinstr void arch_stack_walk(stack_trace_consume_fn consume_entry,
+noinline notrace void arch_stack_walk(stack_trace_consume_fn consume_entry,
 			      void *cookie, struct task_struct *task,
 			      struct pt_regs *regs)
 {
