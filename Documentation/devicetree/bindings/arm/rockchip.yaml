@@ -647,13 +647,6 @@ properties:
           - const: pine64,soquartz
           - const: rockchip,rk3566
 
-      - description: Radxa Compute Module 3(CM3)
-        items:
-          - enum:
-              - radxa,cm3-io
-          - const: radxa,cm3
-          - const: rockchip,rk3566
-
       - description: Radxa CM3 Industrial
         items:
           - enum:
