@@ -4,11 +4,12 @@
 #include "rk3568-radxa-cm3i.dtsi"
 
 / {
-	model = "Radxa E25 Carrier Board";
-	compatible = "radxa,e25", "radxa,cm3i", "rockchip,rk3568";
+	model = "Radxa E25";
+	compatible = "radxa,e25", "rockchip,rk3568";
 
 	aliases {
-		mmc1 = &sdmmc0;
+		mmc0 = &sdmmc0;
+		mmc1 = &sdhci;
 	};
 
 	pwm-leds {
