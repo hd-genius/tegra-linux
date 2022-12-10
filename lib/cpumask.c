@@ -121,7 +121,7 @@ void __init free_bootmem_cpumask_var(cpumask_var_t mask)
  * i.e. call this function in a loop, like:
  *
  * for (i = 0; i < num_online_cpus(); i++) {
- *	cpu = cpumask_local_spread(i, node);
+ *	cpu = cpumask_local_spread();
  *	do_something(cpu);
  * }
  *
