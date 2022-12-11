@@ -429,12 +429,12 @@ asmlinkage long parisc_inotify_init1(int flags)
 /*
  * madvise() wrapper
  *
- * Up to kernel v6.1 parisc has different values than all other
+ * Up to kernel v6.0 parisc had different values than all other
  * platforms for the MADV_xxx flags listed below.
- * To keep binary compatibility with existing userspace programs
- * translate the former values to the new values.
+ * To keep binary compatibility with existing userspace programs we
+ * translate here the former values to the new values.
  *
- * XXX: Remove this wrapper in year 2025 (or later)
+ * XXX: Remove this wrapper in year 2025 (or later)?
  */
 
 asmlinkage notrace long parisc_madvise(unsigned long start, size_t len_in, int behavior)
