@@ -579,7 +579,10 @@ extern void __warn_flushing_systemwide_wq(void)
 /* Please stop using this function, for this function will be removed in near future. */
 #define flush_scheduled_work()						\
 ({									\
-	__warn_flushing_systemwide_wq();				\
+	if (0)								\
+		__warn_flushing_systemwide_wq();			\
+	pr_info("Please don't flush events workqueue at %s:%d\n", __FILE__, __LINE__); \
+	show_one_workqueue(system_wq);					\
 	__flush_workqueue(system_wq);					\
 })
 
