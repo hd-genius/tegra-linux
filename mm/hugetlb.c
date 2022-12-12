@@ -260,6 +260,12 @@ static inline struct hugepage_subpool *subpool_vma(struct vm_area_struct *vma)
 /*
  * hugetlb vma_lock helper routines
  */
+static bool __vma_shareable_lock(struct vm_area_struct *vma)
+{
+	return vma->vm_flags & (VM_MAYSHARE | VM_SHARED) &&
+		vma->vm_private_data;
+}
+
 void hugetlb_vma_lock_read(struct vm_area_struct *vma)
 {
 	if (__vma_shareable_lock(vma)) {
