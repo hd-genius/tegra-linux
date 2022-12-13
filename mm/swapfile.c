@@ -1745,13 +1745,13 @@ static int unuse_pte(struct vm_area_struct *vma, pmd_t *pmd,
 	struct page *page = folio_file_page(folio, swp_offset(entry));
 	struct page *swapcache;
 	spinlock_t *ptl;
-	pte_t *pte, new_pte, old_pte;
+	pte_t *pte, new_pte;
 	bool hwposioned = false;
 	int ret = 1;
 
 	swapcache = page;
 	page = ksm_might_need_to_copy(page, vma, addr);
-	if (IS_ERR_OR_NULL(page))
+	if (unlikely(!page))
 		return -ENOMEM;
 	else if (unlikely(PTR_ERR(page) == -EHWPOISON))
 		hwposioned = true;
@@ -1763,9 +1763,7 @@ static int unuse_pte(struct vm_area_struct *vma, pmd_t *pmd,
 		goto out;
 	}
 
-	old_pte = ptep_get(pte);
-
-	if (unlikely(hwposioned || !PageUptodate(page))) {
+	if (hwposioned || !PageUptodate(page)) {
 		swp_entry_t swp_entry;
 
 		dec_mm_counter(vma->vm_mm, MM_SWAPENTS);
