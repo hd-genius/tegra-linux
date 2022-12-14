@@ -73,7 +73,7 @@ int mfill_atomic_install_pte(pmd_t *dst_pmd,
 		writable = false;
 	if (writable)
 		_dst_pte = pte_mkwrite(_dst_pte);
-	if (flags & MFILL_ATOMIC_WP)
+	if (wp_copy)
 		_dst_pte = pte_mkuffd_wp(_dst_pte);
 
 	ret = -EAGAIN;
