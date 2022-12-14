@@ -857,7 +857,7 @@ copy_nonpresent_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 			return -EBUSY;
 		return -ENOENT;
 	} else if (is_pte_marker_entry(entry)) {
-		if (is_swapin_error_entry(entry) || userfaultfd_wp(dst_vma))
+		if (userfaultfd_wp(dst_vma))
 			set_pte_at(dst_mm, addr, dst_pte, pte);
 		return 0;
 	}
