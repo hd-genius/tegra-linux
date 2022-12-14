@@ -857,7 +857,7 @@ copy_nonpresent_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 			return -EBUSY;
 		return -ENOENT;
 	} else if (is_pte_marker_entry(entry)) {
-		if (userfaultfd_wp(dst_vma))
+		if (is_swapin_error_entry(entry) || userfaultfd_wp(dst_vma))
 			set_pte_at(dst_mm, addr, dst_pte, pte);
 		return 0;
 	}
@@ -3649,7 +3649,7 @@ static vm_fault_t pte_marker_clear(struct vm_fault *vmf)
 	 * quickly from a PTE_MARKER_UFFD_WP into PTE_MARKER_SWAPIN_ERROR.
 	 * So is_pte_marker() check is not enough to safely drop the pte.
 	 */
-	if (pte_same(vmf->orig_pte, ptep_get(vmf->pte)))
+	if (pte_same(vmf->orig_pte, *vmf->pte))
 		pte_clear(vmf->vma->vm_mm, vmf->address, vmf->pte);
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	return 0;
