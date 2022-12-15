@@ -1495,6 +1495,7 @@ static void __destroy_compound_gigantic_folio(struct folio *folio,
 			set_page_refcounted(p);
 	}
 
+	folio_set_order(folio, 0);
 	__folio_clear_head(folio);
 }
 
@@ -1956,6 +1957,9 @@ static bool __prep_compound_gigantic_folio(struct folio *folio,
 	struct page *p;
 
 	__folio_clear_reserved(folio);
+	__folio_set_head(folio);
+	/* we rely on prep_new_hugetlb_folio to set the destructor */
+	folio_set_order(folio, order);
 	for (i = 0; i < nr_pages; i++) {
 		p = folio_page(folio, i);
 
@@ -2022,6 +2026,8 @@ out_error:
 		p = folio_page(folio, j);
 		__ClearPageReserved(p);
 	}
+	folio_set_order(folio, 0);
+	__folio_clear_head(folio);
 	return false;
 }
 

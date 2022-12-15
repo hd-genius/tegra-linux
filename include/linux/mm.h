@@ -1231,6 +1231,31 @@ static inline void folio_set_compound_dtor(struct folio *folio,
 
 void destroy_large_folio(struct folio *folio);
 
+static inline int head_compound_pincount(struct page *head)
+{
+	return atomic_read(compound_pincount_ptr(head));
+}
+
+static inline void set_compound_order(struct page *page, unsigned int order)
+{
+	page[1].compound_order = order;
+#ifdef CONFIG_64BIT
+	page[1].compound_nr = 1U << order;
+#endif
+}
+
+/* Returns the number of pages in this potentially compound page. */
+static inline unsigned long compound_nr(struct page *page)
+{
+	if (!PageHead(page))
+		return 1;
+#ifdef CONFIG_64BIT
+	return page[1].compound_nr;
+#else
+	return 1UL << compound_order(page);
+#endif
+}
+
 /* Returns the number of bytes in this potentially compound page. */
 static inline unsigned long page_size(struct page *page)
 {
