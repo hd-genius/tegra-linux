@@ -273,6 +273,7 @@ SYSCALL_DEFINE2(memfd_create,
 		unsigned int, flags)
 {
 	char comm[TASK_COMM_LEN];
+	struct pid_namespace *ns;
 	unsigned int *file_seals;
 	struct file *file;
 	int fd, error;
@@ -296,7 +297,6 @@ SYSCALL_DEFINE2(memfd_create,
 	if (!(flags & (MFD_EXEC | MFD_NOEXEC_SEAL))) {
 #ifdef CONFIG_SYSCTL
 		int sysctl = MEMFD_NOEXEC_SCOPE_EXEC;
-		struct pid_namespace *ns;
 
 		ns = task_active_pid_ns(current);
 		if (ns)
@@ -310,7 +310,7 @@ SYSCALL_DEFINE2(memfd_create,
 			flags |= MFD_NOEXEC_SEAL;
 			break;
 		default:
-			pr_warn_once(
+			pr_warn_ratelimited(
 				"memfd_create(): MFD_NOEXEC_SEAL is enforced, pid=%d '%s'\n",
 				task_pid_nr(current), get_task_comm(comm, current));
 			return -EINVAL;
@@ -318,7 +318,7 @@ SYSCALL_DEFINE2(memfd_create,
 #else
 		flags |= MFD_EXEC;
 #endif
-		pr_warn_once(
+		pr_warn_ratelimited(
 			"memfd_create() without MFD_EXEC nor MFD_NOEXEC_SEAL, pid=%d '%s'\n",
 			task_pid_nr(current), get_task_comm(comm, current));
 	}
@@ -371,10 +371,8 @@ SYSCALL_DEFINE2(memfd_create,
 
 		inode->i_mode &= ~0111;
 		file_seals = memfd_file_seals_ptr(file);
-		if (file_seals) {
-			*file_seals &= ~F_SEAL_SEAL;
-			*file_seals |= F_SEAL_EXEC;
-		}
+		*file_seals &= ~F_SEAL_SEAL;
+		*file_seals |= F_SEAL_EXEC;
 	} else if (flags & MFD_ALLOW_SEALING) {
 		/* MFD_EXEC and MFD_ALLOW_SEALING are set */
 		file_seals = memfd_file_seals_ptr(file);
