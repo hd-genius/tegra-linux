@@ -351,14 +351,10 @@ static void decrypt_bh(struct work_struct *work)
  */
 static void end_buffer_async_read_io(struct buffer_head *bh, int uptodate)
 {
-	struct inode *inode = bh->b_folio->mapping->host;
-	bool decrypt = fscrypt_inode_uses_fs_layer_crypto(inode);
-	bool verify = need_fsverity(bh);
-
-	/* Decrypt (with fscrypt) and/or verify (with fsverity) if needed. */
-	if (uptodate && (decrypt || verify)) {
-		struct postprocess_bh_ctx *ctx =
-			kmalloc(sizeof(*ctx), GFP_ATOMIC);
+	/* Decrypt if needed */
+	if (uptodate &&
+	    fscrypt_inode_uses_fs_layer_crypto(bh->b_folio->mapping->host)) {
+		struct decrypt_bh_ctx *ctx = kmalloc(sizeof(*ctx), GFP_ATOMIC);
 
 		if (ctx) {
 			ctx->bh = bh;
