@@ -1489,22 +1489,9 @@ static void kmemleak_cond_resched(struct kmemleak_object *object)
 	if (!get_object(object))
 		return;	/* Try next object */
 
-	raw_spin_lock_irq(&kmemleak_lock);
-	if (object->del_state & DELSTATE_REMOVED)
-		goto unlock_put;	/* Object removed */
-	object->del_state |= DELSTATE_NO_DELETE;
-	raw_spin_unlock_irq(&kmemleak_lock);
-
 	rcu_read_unlock();
 	cond_resched();
 	rcu_read_lock();
-
-	raw_spin_lock_irq(&kmemleak_lock);
-	if (object->del_state & DELSTATE_REMOVED)
-		list_del_rcu(&object->object_list);
-	object->del_state &= ~DELSTATE_NO_DELETE;
-unlock_put:
-	raw_spin_unlock_irq(&kmemleak_lock);
 	put_object(object);
 }
 
