@@ -1525,10 +1525,8 @@ SYSCALL_DEFINE4(set_mempolicy_home_node, unsigned long, start, unsigned long, le
 		 * or MPOL_PREFERRED_MANY we return error. We don't reset
 		 * the home node for vmas we already updated before.
 		 */
-		old = vma_policy(vma);
-		if (!old)
-			continue;
-		if (old->mode != MPOL_BIND && old->mode != MPOL_PREFERRED_MANY) {
+		if (new->mode != MPOL_BIND && new->mode != MPOL_PREFERRED_MANY) {
+			mpol_put(new);
 			err = -EOPNOTSUPP;
 			break;
 		}
