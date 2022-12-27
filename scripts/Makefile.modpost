@@ -57,6 +57,10 @@ ifneq ($(findstring i,$(filter-out --%,$(MAKEFLAGS))),)
 modpost-args += -n
 endif
 
+ifneq ($(KBUILD_MODPOST_WARN)$(missing-input),)
+modpost-args += -w
+endif
+
 # Read out modules.order to pass in modpost.
 # Otherwise, allmodconfig would fail with "Argument list too long".
 ifdef KBUILD_MODULES
