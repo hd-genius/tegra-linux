@@ -169,3 +169,9 @@ sphinx_*/
 
 # Rust analyzer configuration
 /rust-project.json
+
+# Custom scripts and presets
+!/hd-genius/*
+
+# Output files for surface rt build
+/output/
