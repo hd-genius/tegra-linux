@@ -1,18 +1,12 @@
-Linux kernel
-============
+# Tegra Linux
+This project is a fork of the grate-driver project that aims to create slim and optimized kernels for different Nvidia Tegra based devices. This project aims to further optimize kernels by removing unnecessary drivers, compiling kernels with optimized parameters, and providing device specific configuration files.
 
-There are several guides for kernel developers and users. These guides can
-be rendered in a number of formats, like HTML and PDF. Please read
-Documentation/admin-guide/README.rst first.
+# Devices
 
-In order to build the documentation, use ``make htmldocs`` or
-``make pdfdocs``.  The formatted documentation can also be read online at:
+## Supported
+You can follow the build steps in each device's branch to build it's optimized kernel. Automated prebuilt kernels will be added in the future. The following devices are fully supported:
+- Microsoft Surface RT (surface-rt)
 
-    https://www.kernel.org/doc/html/latest/
-
-There are various text files in the Documentation/ subdirectory,
-several of them using the Restructured Text markup notation.
-
-Please read the Documentation/process/changes.rst file, as it contains the
-requirements for building and running the kernel, and information about
-the problems which may result by upgrading your kernel.
+## Planned
+- Nintendo Switch
+- Nvidia Shield Portable
